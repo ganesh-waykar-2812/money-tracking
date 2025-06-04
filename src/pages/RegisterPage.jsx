@@ -3,7 +3,7 @@ import { login, register } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import TextInput from "../components/reusable/TextInput";
 
-export default function RegisterPage() {
+export default function RegisterPage({ setUserName }) {
   const [registerForm, setRegisterForm] = useState({
     name: "",
     email: "",
@@ -19,17 +19,15 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const form = activeTab === "Sign Up" ? registerForm : loginForm;
     if (activeTab === "Login") {
-      // Handle login logic here
-      // You can call a login function from your API service
       try {
         const res = await login(form);
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem("userName", res.data.user.name); // Save user name
+        setUserName(res.data.user.name); // Update state in App
         navigate("/");
       } catch (error) {
-        console.log("error", error?.response?.data?.message);
         alert(error?.response?.data?.message);
       }
       return;
@@ -45,14 +43,11 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="flex flex-1 items-center justify-center ">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm"
       >
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Lend & Borrow
-        </h2>
         <div className="grid grid-cols-2 justify-between items-center mb-6 bg-[#EDEEEF] rounded-xl p-1">
           {tabs.map((tab) => (
             <button

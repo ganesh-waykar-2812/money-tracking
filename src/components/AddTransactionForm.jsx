@@ -23,6 +23,8 @@ const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
     },
   ];
 
+  const isFormValid = form.personId && form.amount && form.type;
+
   return (
     <form
       onSubmit={(e) => {
@@ -69,7 +71,9 @@ const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
           isRequired={false}
         />
       </div>
-      <button className="mt-4 w-full button-custom">Add Transaction</button>
+      <button className="mt-4 w-full button-custom" disabled={!isFormValid}>
+        Add Transaction
+      </button>
     </form>
   );
 };
