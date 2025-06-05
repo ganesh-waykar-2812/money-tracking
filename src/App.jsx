@@ -35,7 +35,7 @@ const TABS = [
 ];
 
 function App() {
-  const REQUIRED_TOKEN_VERSION = "2"; // Increment this after deployment
+  const REQUIRED_TOKEN_VERSION = "3"; // Increment this after deployment
 
   const [userName, setUserName] = useState(
     localStorage.getItem("userName") || ""
