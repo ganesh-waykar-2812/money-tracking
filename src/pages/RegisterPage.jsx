@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { login, register } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import TextInput from "../components/reusable/TextInput";
+import LoadingPopup from "../components/reusable/LoadingPopup";
 
 export default function RegisterPage({ setUserName }) {
   const [registerForm, setRegisterForm] = useState({
@@ -16,9 +17,11 @@ export default function RegisterPage({ setUserName }) {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // <-- Start loading
     const form = activeTab === "Sign Up" ? registerForm : loginForm;
     if (activeTab === "Login") {
       try {
@@ -30,6 +33,7 @@ export default function RegisterPage({ setUserName }) {
       } catch (error) {
         alert(error?.response?.data?.message);
       }
+      setLoading(false); // <-- Stop loading
       return;
     }
     // Handle registration logic here
@@ -40,10 +44,12 @@ export default function RegisterPage({ setUserName }) {
     } catch (error) {
       alert(error?.response?.data?.message);
     }
+    setLoading(false); // <-- Stop loading
   };
 
   return (
     <div className="flex flex-1 items-center justify-center ">
+      <LoadingPopup show={loading} />
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm"
