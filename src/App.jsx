@@ -4,6 +4,7 @@ import Dashboard from "./pages/Dashboard";
 import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { REQUIRED_TOKEN_VERSION } from "./constants/globle";
 
 const TABS = [
   {
@@ -35,8 +36,6 @@ const TABS = [
 ];
 
 function App() {
-  const REQUIRED_TOKEN_VERSION = "3"; // Increment this after deployment
-
   const [userName, setUserName] = useState(
     localStorage.getItem("userName") || ""
   );
