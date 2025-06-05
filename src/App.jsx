@@ -6,10 +6,32 @@ import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const TABS = [
-  { key: "addPerson", label: "Add Person" },
-  { key: "addTransaction", label: "Create Transaction" },
-  { key: "summary", label: "Summary" },
-  { key: "transactions", label: "All Transactions" },
+  {
+    key: "lendBorrow",
+    label: "Lend & Borrow",
+    icon: "🤝",
+    children: [
+      { key: "addPerson", label: "Add Person", icon: "➕" },
+      { key: "addTransaction", label: "Create Transaction", icon: "💸" },
+      // { key: "summary", label: "Summary", icon: "📊" },
+      { key: "transactions", label: "Transactions List", icon: "📋" },
+    ],
+  },
+  {
+    key: "personalExpenses",
+    label: "Personal Expenses",
+    icon: "🧾",
+    children: [
+      { key: "addExpense", label: "Add Expense", icon: "➕" },
+      { key: "expenseList", label: "Expense List", icon: "📄" },
+      // { key: "expenseSummary", label: "Summary", icon: "📊" },
+    ],
+  },
+  {
+    key: "feedback",
+    label: "Feedback",
+    icon: "💬",
+  },
 ];
 
 function App() {
@@ -18,7 +40,7 @@ function App() {
   const [userName, setUserName] = useState(
     localStorage.getItem("userName") || ""
   );
-  const [activeTab, setActiveTab] = useState("addPerson");
+  const [activeTab, setActiveTab] = useState(TABS[0].children[0].key);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
@@ -36,6 +58,10 @@ function App() {
       window.location.href = "/register";
     }
   }, []);
+  // In App.jsx
+  // Local state to track which section is expanded
+
+  const [expandedSection, setExpandedSection] = useState(TABS[0].key);
 
   return (
     <BrowserRouter>
@@ -48,6 +74,8 @@ function App() {
           tabs={TABS}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          expandedSection={expandedSection}
+          setExpandedSection={setExpandedSection}
         />
         <div className="flex-1 flex">
           <Routes>
@@ -59,6 +87,8 @@ function App() {
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     tabs={TABS}
+                    expandedSection={expandedSection}
+                    setExpandedSection={setExpandedSection}
                   />
                 </ProtectedRoute>
               }

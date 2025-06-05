@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export default function Header({
   userName,
@@ -8,8 +8,9 @@ export default function Header({
   tabs,
   activeTab,
   setActiveTab,
+  expandedSection,
+  setExpandedSection,
 }) {
-  console.log("username", userName);
   return (
     <header className="w-full flex flex-row items-center sm:items-stretch justify-between px-4 py-3 sm:px-8 sm:py-5 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 shadow-lg rounded-b-2xl relative">
       {/* Sidebar Toggle Button (mobile only) */}
@@ -34,34 +35,60 @@ export default function Header({
           </svg>
         </button>
       )}
+
       <aside
         className={`
-                fixed  left-0 top-0 h-screen z-20 bg-white/90 shadow-lg rounded-r-2xl p-4 min-w-[180px] max-w-[220px]
-                flex-col gap-2 transition-transform duration-300
-                ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-                sm:static sm:translate-x-0 sm:flex sm:mt-8 sm:ml-4 sm:h-fit
-              `}
-        style={{
-          display: sidebarOpen ? "flex" : "none",
-        }}
+          fixed sm:hidden top-16 left-0 h-[calc(100vh-4rem)] z-20 bg-white/90 shadow-lg rounded-r-2xl p-4 min-w-[180px] max-w-[260px]
+          flex-col gap-2 transition-transform duration-300
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          sm:static sm:translate-x-0 sm:flex sm:mt-8 sm:ml-4 sm:h-fit
+        `}
       >
-        <div className="flex flex-col gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
-                activeTab === tab.key
-                  ? "bg-indigo-500 text-white shadow"
-                  : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
-              }`}
-              onClick={() => {
-                setActiveTab(tab.key);
-                onSidebarToggle(false);
-              }}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
+        {/* Main Sections */}
+        <div className="flex flex-col gap-2 mb-2">
+          {tabs.map((section) => (
+            <div key={section.key}>
+              <button
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition text-left w-full ${
+                  expandedSection === section.key
+                    ? "bg-indigo-500 text-white shadow"
+                    : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
+                }`}
+                onClick={() => {
+                  setExpandedSection(
+                    expandedSection === section.key ? null : section.key
+                  );
+                  setActiveTab(section.children[0].key); // default to first sub-tab
+                }}
+              >
+                <span>{section.icon}</span>
+                <span>{section.label}</span>
+                <span className="ml-auto">
+                  {expandedSection === section.key ? "▲" : "▼"}
+                </span>
+              </button>
+              {/* Sub-tabs: only show if this section is expanded */}
+              {expandedSection === section.key && (
+                <div className="flex flex-col gap-2 pl-4 pt-4">
+                  {section?.children?.map((tabItem) => (
+                    <button
+                      key={tabItem.key}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
+                        activeTab === tabItem.key
+                          ? "bg-indigo-400 text-white shadow"
+                          : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
+                      }`}
+                      onClick={() => {
+                        setActiveTab(tabItem.key);
+                      }}
+                    >
+                      <span>{tabItem.icon}</span>
+                      <span>{tabItem.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </aside>
@@ -75,7 +102,7 @@ export default function Header({
 
       {/* App Name & Breadcrumb */}
       <div className="flex flex-col  items-start flex-1 ml-12">
-        <div className="flex items-center gap-3 text-lg  font-extrabold text-white tracking-wide drop-shadow">
+        <div className="flex items-center gap-3 text-lg font-bold text-white tracking-wide drop-shadow">
           <span
             role="img"
             aria-label="Lend & Borrow"

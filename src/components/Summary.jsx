@@ -24,7 +24,10 @@ const Summary = ({ transactions }) => {
 
   return (
     <div className="mb-4">
-      <h2 className="text-xl font-semibold mb-2">Summary</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+        Summary
+      </h2>
+
       <div className="grid gap-4 md:grid-cols-2">
         {Object.entries(summaryByPerson).map(([person, data]) => {
           const lendRemaining = data.lend - data.received;

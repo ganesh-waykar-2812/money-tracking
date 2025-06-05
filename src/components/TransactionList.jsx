@@ -42,7 +42,9 @@ const typeDetails = {
 const TransactionList = ({ transactions }) => {
   return (
     <>
-      <h2 className="text-xl font-semibold mb-2">All Transactions</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+        Transactions List
+      </h2>
       <div className="bg-white p-4 rounded shadow text-black">
         <ul className="space-y-3">
           {transactions.map((txn) => {
