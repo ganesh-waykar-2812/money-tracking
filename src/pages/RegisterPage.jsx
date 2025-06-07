@@ -3,6 +3,7 @@ import { login, register } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import TextInput from "../components/reusable/TextInput";
 import LoadingPopup from "../components/reusable/LoadingPopup";
+import { REQUIRED_TOKEN_VERSION } from "../constants/globle";
 
 export default function RegisterPage({ setUserName }) {
   const [registerForm, setRegisterForm] = useState({
@@ -28,6 +29,7 @@ export default function RegisterPage({ setUserName }) {
         const res = await login(form);
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("userName", res.data.user.name); // Save user name
+        localStorage.setItem("tokenVersion", REQUIRED_TOKEN_VERSION);
         setUserName(res.data.user.name); // Update state in App
         navigate("/");
       } catch (error) {

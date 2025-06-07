@@ -22,6 +22,9 @@ API.interceptors.response.use(
     ) {
       // Clear token and redirect to login (or call logout logic)
       localStorage.removeItem("token");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("tokenVersion");
+
       window.location.href = "/register"; // or your login route
     }
     return Promise.reject(error);

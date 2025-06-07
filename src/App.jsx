@@ -37,9 +37,8 @@ const TABS = [
 ];
 
 function App() {
-  const [userName, setUserName] = useState(
-    localStorage.getItem("userName") || ""
-  );
+  const userNameFromStorage = localStorage.getItem("userName") || "";
+  const [userName, setUserName] = useState(userNameFromStorage);
   const [activeTab, setActiveTab] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -51,18 +50,18 @@ function App() {
     setActiveTab(null);
     setSidebarOpen(false);
   };
-  const storedVersion = localStorage.getItem("tokenVersion");
+  const storedVersion = localStorage.getItem("tokenVersion") || "";
   useEffect(() => {
+    console.log("inside useEffect");
     if (storedVersion !== REQUIRED_TOKEN_VERSION) {
       localStorage.removeItem("token");
       localStorage.removeItem("userName");
-      localStorage.setItem("tokenVersion", REQUIRED_TOKEN_VERSION);
-      window.location.href = "/register";
+      // window.location.href = "/register";
       setUserName("");
       setActiveTab(null);
       setSidebarOpen(false);
     }
-  }, [storedVersion]);
+  }, [storedVersion, userNameFromStorage]);
   // In App.jsx
   // Local state to track which section is expanded
 

@@ -8,7 +8,6 @@ export default function ProtectedRoute({ children }) {
   if (storedVersion !== REQUIRED_TOKEN_VERSION) {
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
-    localStorage.setItem("tokenVersion", REQUIRED_TOKEN_VERSION);
     localStorage.removeItem("hasSeenHelpModal");
   }
   if (!isAuthenticated) {

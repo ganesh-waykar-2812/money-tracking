@@ -18,6 +18,7 @@ import TextInput from "../components/reusable/TextInput";
 import LoadingPopup from "../components/reusable/LoadingPopup";
 import TransactionList from "../components/TransactionList";
 import Dropdown from "../components/reusable/Dropdown";
+import { REQUIRED_TOKEN_VERSION } from "../constants/globle";
 
 export default function Dashboard({
   activeTab,
