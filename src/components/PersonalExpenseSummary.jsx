@@ -1,13 +1,11 @@
 import React from "react";
 
-export default function PersonalExpenseSummary({ expenses }) {
+export default function PersonalExpenseSummary({
+  expenses,
+  total,
+  byCategory,
+}) {
   if (!expenses || expenses.length === 0) return null;
-
-  const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
-  const byCategory = expenses.reduce((acc, e) => {
-    acc[e.category] = (acc[e.category] || 0) + Number(e.amount);
-    return acc;
-  }, {});
 
   return (
     <div className="bg-indigo-50 p-4 rounded shadow text-indigo-900 mb-4">

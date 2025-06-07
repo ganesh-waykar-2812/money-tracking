@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { login, register } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import TextInput from "../components/reusable/TextInput";
@@ -47,9 +47,78 @@ export default function RegisterPage({ setUserName }) {
     setLoading(false); // <-- Stop loading
   };
 
+  const [showHelp, setShowHelp] = useState(false);
+
+  useEffect(() => {
+    const hasSeenHelp = localStorage.getItem("hasSeenHelpModal");
+    if (!hasSeenHelp) {
+      setShowHelp(true);
+      localStorage.setItem("hasSeenHelpModal", "true");
+    }
+  }, []);
+
   return (
     <div className="flex flex-1 items-center justify-center ">
       <LoadingPopup show={loading} />
+      {/* Help Modal */}
+      {showHelp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40  overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full text-left text-black mt-8 relative max-h-[90vh] overflow-y-auto">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-black"
+              onClick={() => setShowHelp(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 className="text-xl font-bold mb-2">
+              How to Use Your Dashboard
+            </h2>
+            {/* What's New Section */}
+            <div className="mb-4 p-3 rounded bg-indigo-50 border border-indigo-200 ">
+              <h3 className="font-semibold text-indigo-700 mb-1">
+                🚀 What's New
+              </h3>
+              <ul className="list-disc ml-5 text-indigo-800 text-base space-y-1">
+                <li>
+                  <b>Welcome Screen:</b> Now, when you log in, you'll see a
+                  friendly welcome message until you select a feature from the
+                  sidebar.
+                </li>
+                <li>
+                  <b>PDF Export Improvements:</b> Exported PDFs for transactions
+                  and expenses now include clear summaries and applied filters.
+                </li>
+                <li>
+                  <b>Cleaner Summaries:</b> Summaries in both the dashboard and
+                  exported PDFs are now more readable and organized.
+                </li>
+              </ul>
+            </div>
+            <ul className="list-disc ml-5 space-y-2 text-base">
+              <li>
+                <b>Welcome Screen:</b> When you log in, you'll see a welcome
+                message. Use the sidebar to select a feature and get started.
+              </li>
+              <li>
+                <b>Lend & Borrow:</b> Add people, record money you lend, borrow,
+                receive, or repay. View summaries and all transactions.
+              </li>
+              <li>
+                <b>Personal Expenses:</b> Track your own expenses by category,
+                see monthly lists and summaries.
+              </li>
+              <li>
+                <b>Export as PDF:</b> You can export both transactions and
+                personal expenses as PDF files, including summaries and applied
+                filters.
+              </li>
+              <li>Use the sidebar to switch between features and tabs.</li>
+              <li>All your data is securely saved and only visible to you.</li>
+            </ul>
+          </div>
+        </div>
+      )}
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm"

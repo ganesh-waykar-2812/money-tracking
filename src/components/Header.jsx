@@ -14,7 +14,7 @@ export default function Header({
   return (
     <header className="w-full flex flex-row items-center sm:items-stretch justify-between px-4 py-3 sm:px-8 sm:py-5 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 shadow-lg rounded-b-2xl relative">
       {/* Sidebar Toggle Button (mobile only) */}
-      {onSidebarToggle && (
+      {userName && onSidebarToggle && (
         <button
           className="sm:hidden absolute left-4 top-1/2 -translate-y-1/2 bg-indigo-500 text-white p-2 rounded shadow-lg"
           onClick={onSidebarToggle}
@@ -58,7 +58,7 @@ export default function Header({
                   setExpandedSection(
                     expandedSection === section.key ? null : section.key
                   );
-                  setActiveTab(section.children[0].key); // default to first sub-tab
+                  setActiveTab(null);
                 }}
               >
                 <span>{section.icon}</span>
@@ -119,7 +119,7 @@ export default function Header({
         {userName && (
           <>
             <span className=" text-white font-medium drop-shadow text-sm sm:text-base">
-              Hello, {userName}
+              Hello, {userName.split(" ")[0]}!
             </span>
             <button
               onClick={onLogout}

@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getPeople,
   getTransactions,
@@ -122,40 +122,6 @@ export default function Dashboard({
     }
   }, [expandedSection]);
 
-  const [showHelp, setShowHelp] = useState(false);
-  useEffect(() => {
-    const hasSeenHelp = localStorage.getItem("hasSeenHelpModal");
-    if (!hasSeenHelp) {
-      setShowHelp(true);
-      localStorage.setItem("hasSeenHelpModal", "true");
-    }
-  }, []);
-
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}`;
-  });
-
-  const filteredExpenses =
-    selectedMonth === "all"
-      ? personalExpenses
-      : personalExpenses.filter((exp) => {
-          if (!exp.date) return false;
-          const [year, month] = exp.date.split("-");
-          return `${year}-${month}` === selectedMonth;
-        });
-  // Get unique months from expenses
-  const allMonths = Array.from(
-    new Set(
-      personalExpenses.map((exp) => exp.date?.slice(0, 7)).filter(Boolean)
-    )
-  )
-    .sort()
-    .reverse();
-
   const [feedback, setFeedback] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
 
@@ -174,7 +140,30 @@ export default function Dashboard({
     }
     setFeedbackLoading(false);
   };
-  console.log("expanded", expandedSection);
+  const summary = useMemo(() => {
+    const summaryByPerson = {};
+
+    transactions.forEach((txn) => {
+      const { personId } = txn;
+      const { name } = personId;
+
+      if (!summaryByPerson[name]) {
+        summaryByPerson[name] = { lend: 0, borrowed: 0, received: 0, repay: 0 };
+      }
+
+      if (txn.type === "lend") {
+        summaryByPerson[name].lend += txn.amount;
+      } else if (txn.type === "borrowed") {
+        summaryByPerson[name].borrowed += txn.amount;
+      } else if (txn.type === "received") {
+        summaryByPerson[name].received += txn.amount;
+      } else if (txn.type === "repay") {
+        summaryByPerson[name].repay += txn.amount;
+      }
+    });
+    return summaryByPerson;
+  }, [transactions]);
+
   return (
     <div className=" w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex font-sans relative">
       <aside
@@ -196,7 +185,7 @@ export default function Dashboard({
                   setExpandedSection(
                     expandedSection === section.key ? null : section.key
                   );
-                  setActiveTab(section.children[0].key); // default to first sub-tab
+                  setActiveTab(null); // default to first sub-tab
                 }}
               >
                 <span>{section.icon}</span>
@@ -230,42 +219,25 @@ export default function Dashboard({
           ))}
         </div>
       </aside>
-      {/* Help Modal */}
-      {showHelp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full text-left text-black relative">
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-black"
-              onClick={() => setShowHelp(false)}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-bold mb-2">How Lend & Borrow Works</h2>
-            <ul className="list-disc ml-5 space-y-2 text-base">
-              <li>
-                <b>Lend & Borrow:</b> Add people you transact with, record money
-                you lend, borrow, receive, or repay. View summaries and all
-                transactions.
-              </li>
-              <li>
-                <b>Personal Expenses:</b> Track your own expenses by category,
-                see monthly lists and summaries.
-              </li>
-              <li>Use the sidebar to switch between features and tabs.</li>
-              <li>All your data is securely saved and only visible to you.</li>
-            </ul>
-            {/* <div className="mt-4 text-sm text-gray-600">
-              Need more help? Contact support or check the documentation.
-            </div> */}
-          </div>
-        </div>
-      )}
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center py-4 sm:py-8 w-full ml-0 sm:ml-0">
         <div className="max-w-4xl bg-white/90 rounded-2xl shadow-xl p-2 sm:p-4 md:p-8 flex flex-col min-w-sm">
           <div className="flex-1 min-w-0">
+            {!activeTab && (
+              <div className="text-center py-16">
+                <h1 className="text-3xl font-bold mb-4 text-indigo-700">
+                  Welcome to your Dashboard!
+                </h1>
+                <p className="text-lg text-gray-700 mb-2">
+                  Use the sidebar to navigate between Lend & Borrow, Personal
+                  Expenses, and Feedback.
+                </p>
+                <p className="text-md text-gray-500">
+                  Click a section on the left to get started.
+                </p>
+              </div>
+            )}
             {activeTab === "addPerson" && (
               <>
                 <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
@@ -307,8 +279,10 @@ export default function Dashboard({
 
             {activeTab === "transactions" && (
               <>
-                <Summary transactions={transactions} />
-                <TransactionList transactions={transactions} />
+                <TransactionList
+                  transactions={transactions}
+                  summary={summary}
+                />
               </>
             )}
 
@@ -323,61 +297,11 @@ export default function Dashboard({
                   </>
                 )}
                 {activeTab === "expenseList" && (
-                  <>
-                    <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-                      Expense List
-                    </h2>
-                    <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-2">
-                      <label
-                        htmlFor="month"
-                        className="font-semibold text-gray-700 mb-1 sm:mb-0"
-                      >
-                        Filter by Month:
-                      </label>
-                      <div className="relative w-full sm:w-56">
-                        <Dropdown
-                          onChangeHandler={(value) =>
-                            setSelectedMonth(value.value)
-                          }
-                          options={[
-                            { _id: "all", name: "All" },
-                            ...allMonths.map((month) => ({
-                              _id: month,
-                              name: new Date(month + "-01").toLocaleString(
-                                "default",
-                                {
-                                  year: "numeric",
-                                  month: "long",
-                                }
-                              ),
-                            })),
-                          ]}
-                          placeholder="Select Month"
-                          value={{
-                            _id: selectedMonth,
-                            name:
-                              selectedMonth === "all"
-                                ? "All"
-                                : new Date(
-                                    selectedMonth + "-01"
-                                  ).toLocaleString("default", {
-                                    year: "numeric",
-                                    month: "long",
-                                  }),
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-                      Expense Summary
-                    </h2>
-                    <PersonalExpenseSummary expenses={filteredExpenses} />
-                    <PersonalExpenseList expenses={filteredExpenses} />
-                  </>
+                  <PersonalExpenseList expenses={personalExpenses} />
                 )}
               </>
             )}
-            {expandedSection === "feedback" && (
+            {activeTab === "feedbackForm" && (
               <>
                 <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
                   Feedback

@@ -32,6 +32,7 @@ const TABS = [
     key: "feedback",
     label: "Feedback",
     icon: "💬",
+    children: [{ key: "feedbackForm", label: "Feedback Form", icon: "📝" }],
   },
 ];
 
@@ -39,7 +40,7 @@ function App() {
   const [userName, setUserName] = useState(
     localStorage.getItem("userName") || ""
   );
-  const [activeTab, setActiveTab] = useState(TABS[0].children[0].key);
+  const [activeTab, setActiveTab] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
@@ -60,7 +61,7 @@ function App() {
   // In App.jsx
   // Local state to track which section is expanded
 
-  const [expandedSection, setExpandedSection] = useState(TABS[0].key);
+  const [expandedSection, setExpandedSection] = useState(null);
 
   return (
     <BrowserRouter>
