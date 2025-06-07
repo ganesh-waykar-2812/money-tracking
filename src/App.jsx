@@ -47,17 +47,22 @@ function App() {
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
     window.location.href = "/register";
+    setUserName("");
+    setActiveTab(null);
+    setSidebarOpen(false);
   };
-
+  const storedVersion = localStorage.getItem("tokenVersion");
   useEffect(() => {
-    const storedVersion = localStorage.getItem("tokenVersion");
     if (storedVersion !== REQUIRED_TOKEN_VERSION) {
       localStorage.removeItem("token");
       localStorage.removeItem("userName");
       localStorage.setItem("tokenVersion", REQUIRED_TOKEN_VERSION);
       window.location.href = "/register";
+      setUserName("");
+      setActiveTab(null);
+      setSidebarOpen(false);
     }
-  }, []);
+  }, [storedVersion]);
   // In App.jsx
   // Local state to track which section is expanded
 
