@@ -83,17 +83,11 @@ export default function RegisterPage({ setUserName }) {
               </h3>
               <ul className="list-disc ml-5 text-indigo-800 text-base space-y-1">
                 <li>
-                  <b>Welcome Screen:</b> Now, when you log in, you'll see a
-                  friendly welcome message until you select a feature from the
-                  sidebar.
+                  <b>UI Improvement</b> for transactions list and expense list
                 </li>
                 <li>
-                  <b>PDF Export Improvements:</b> Exported PDFs for transactions
-                  and expenses now include clear summaries and applied filters.
-                </li>
-                <li>
-                  <b>Cleaner Summaries:</b> Summaries in both the dashboard and
-                  exported PDFs are now more readable and organized.
+                  <b>Sorting</b> Now transaction and expenses sorted by
+                  decending order of date.
                 </li>
               </ul>
             </div>

@@ -102,7 +102,7 @@ export default function Header({
 
       {/* App Name & Breadcrumb */}
       <div className="flex flex-col  items-start flex-1 ml-12">
-        <div className="flex items-center gap-3 text-lg font-bold text-white tracking-wide drop-shadow">
+        <div className="flex items-center gap-3 md:text-lg font-bold text-white tracking-wide drop-shadow sm:text-sm xs:text-xs ">
           <span
             role="img"
             aria-label="Lend & Borrow"
@@ -118,7 +118,7 @@ export default function Header({
       <div className="flex items-center gap-2 sm:gap-4 ">
         {userName && (
           <>
-            <span className=" text-white font-medium drop-shadow text-sm sm:text-base">
+            <span className=" text-white font-medium drop-shadow md:text-lg sm:text-sm xs:text-xs">
               Hello, {userName.split(" ")[0]}!
             </span>
             <button
@@ -140,7 +140,7 @@ export default function Header({
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
                 />
               </svg>
-              <span className="hidden xs:inline">Logout</span>
+              <span className="xs:hidden sm:inline">Logout</span>
             </button>
           </>
         )}
