@@ -208,7 +208,9 @@ export default function PersonalExpenseList({ expenses }) {
                   {new Date(exp.date).toLocaleDateString()}
                 </div>
               </div>
-              <span className="font-bold text-indigo-600">INR{exp.amount}</span>
+              <span className="font-bold text-indigo-600 whitespace-nowrap">
+                INR {exp.amount}
+              </span>
             </li>
           ))}
         </ul>
