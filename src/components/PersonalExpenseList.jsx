@@ -138,16 +138,9 @@ export default function PersonalExpenseList({ expenses }) {
   if (!expenses || expenses.length === 0) {
     return <div className="text-gray-500">No expenses for this month.</div>;
   }
-  let viewportWidth = window.innerWidth;
-  console.log("Viewport width (including scrollbar): " + viewportWidth + "px");
-  let contentWidth = document.documentElement.clientWidth;
-  console.log("Viewport width (excluding scrollbar): " + contentWidth + "px");
+
   return (
     <>
-      <h1 className="text-black">{`Viewport width (including scrollbar)`}</h1>
-      <h1 className="text-black text-center">{viewportWidth}</h1>
-      <h1 className="text-black ">{`Viewport width (excluding scrollbar)`}</h1>
-      <h1 className="text-black text-center">{contentWidth}</h1>
       <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
         Expenses
       </h2>

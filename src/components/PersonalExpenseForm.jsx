@@ -2,7 +2,21 @@ import React, { useState } from "react";
 import TextInput from "./reusable/TextInput";
 import Dropdown from "./reusable/Dropdown";
 
-const categories = ["Food", "Rent", "Travel", "Shopping", "Bills", "Other"];
+const categories = [
+  "Food",
+  "Rent",
+  "Travel",
+  "Shopping",
+  "Bills",
+  "Petrol",
+  "Health",
+  "Entertainment",
+  "Insurance",
+  "Education",
+  "Gifts",
+  "Investment",
+  "Other",
+];
 
 export default function PersonalExpenseForm({ onAdd }) {
   const [form, setForm] = useState({
