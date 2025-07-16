@@ -204,9 +204,9 @@ export default function PersonalExpenseList({ expenses }) {
           {filteredExpenses.map((exp, idx) => (
             <li
               key={idx}
-              className="flex justify-between items-center border-b last:border-b-0 py-2"
+              className="flex justify-between items-center border-b last:border-b-0 py-2 max-sm:max-w-[390px]"
             >
-              <div>
+              <div className="wrap-anywhere">
                 <span className="font-medium">{exp.category}</span>
                 <span className="ml-2 text-gray-600 text-sm">
                   {exp.note && `(${exp.note})`}
