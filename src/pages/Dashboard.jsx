@@ -223,7 +223,7 @@ export default function Dashboard({
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center py-4 sm:py-8 w-full ml-0 sm:ml-0">
-        <div className="max-w-4xl bg-white/90 rounded-2xl shadow-xl p-2 sm:p-4 md:p-8 flex flex-col min-w-[300px]">
+        <div className="max-w-4xl max-sm:max-w-[390px] bg-white/90 rounded-2xl shadow-xl p-2 sm:p-4 md:p-8 flex flex-col min-w-[300px]">
           <div className="flex-1 min-w-0">
             {!activeTab && (
               <div className="text-center py-16">
