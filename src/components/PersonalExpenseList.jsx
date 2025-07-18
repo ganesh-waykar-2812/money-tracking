@@ -23,9 +23,9 @@ export default function PersonalExpenseList() {
     fetchExpenses();
   }, []);
 
-  if (!expenses || expenses.length === 0) {
-    return <div className="text-gray-500">No expenses for this month.</div>;
-  }
+  // if (!expenses || expenses.length === 0) {
+  //   return <div className="text-gray-500">No expenses for this month.</div>;
+  // }
 
   const filteredExpenses =
     selectedMonth === "all"
@@ -146,9 +146,9 @@ export default function PersonalExpenseList() {
 
     doc.save("personal_expenses.pdf");
   };
-  if (!expenses || expenses.length === 0) {
-    return <div className="text-gray-500">No expenses for this month.</div>;
-  }
+  // if (!expenses || expenses.length === 0) {
+  //   return <div className="text-gray-500">No expenses for this month.</div>;
+  // }
 
   async function fetchExpenses() {
     setLoading(true);
