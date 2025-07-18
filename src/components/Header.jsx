@@ -1,5 +1,3 @@
-import React, { useEffect, useState } from "react";
-
 export default function Header({
   userName,
   onLogout,
@@ -63,31 +61,35 @@ export default function Header({
               >
                 <span>{section.icon}</span>
                 <span>{section.label}</span>
-                <span className="ml-auto">
-                  {expandedSection === section.key ? "▲" : "▼"}
-                </span>
+                {section.children && section.children.length > 0 ? (
+                  <span className="ml-auto">
+                    {expandedSection === section.key ? "▲" : "▼"}
+                  </span>
+                ) : null}
               </button>
               {/* Sub-tabs: only show if this section is expanded */}
-              {expandedSection === section.key && (
-                <div className="flex flex-col gap-2 pl-4 pt-4">
-                  {section?.children?.map((tabItem) => (
-                    <button
-                      key={tabItem.key}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
-                        activeTab === tabItem.key
-                          ? "bg-indigo-400 text-white shadow"
-                          : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
-                      }`}
-                      onClick={() => {
-                        setActiveTab(tabItem.key);
-                      }}
-                    >
-                      <span>{tabItem.icon}</span>
-                      <span>{tabItem.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              {expandedSection === section.key &&
+                section.children &&
+                section.children.length > 0 && (
+                  <div className="flex flex-col gap-2 pl-4 pt-4">
+                    {section?.children?.map((tabItem) => (
+                      <button
+                        key={tabItem.key}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
+                          activeTab === tabItem.key
+                            ? "bg-indigo-400 text-white shadow"
+                            : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
+                        }`}
+                        onClick={() => {
+                          setActiveTab(tabItem.key);
+                        }}
+                      >
+                        <span>{tabItem.icon}</span>
+                        <span>{tabItem.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
             </div>
           ))}
         </div>

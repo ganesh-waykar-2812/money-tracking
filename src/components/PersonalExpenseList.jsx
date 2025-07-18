@@ -1,10 +1,16 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import PersonalExpenseSummary from "./PersonalExpenseSummary";
 import Dropdown from "./reusable/Dropdown";
+import { addPersonalExpense, getPersonalExpenses } from "../services/api";
+import PersonalExpenseForm from "./PersonalExpenseForm";
+import LoadingPopup from "./reusable/LoadingPopup";
 
-export default function PersonalExpenseList({ expenses }) {
+export default function PersonalExpenseList() {
+  const [activeTab, setActiveTab] = useState("list"); // "list" or "add"
+  const [loading, setLoading] = useState(false);
+  const [expenses, setExpenses] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -12,6 +18,11 @@ export default function PersonalExpenseList({ expenses }) {
       "0"
     )}`;
   });
+
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
   if (!expenses || expenses.length === 0) {
     return <div className="text-gray-500">No expenses for this month.</div>;
   }
@@ -30,7 +41,7 @@ export default function PersonalExpenseList({ expenses }) {
   )
     .sort()
     .reverse();
-
+  console.log("filteredExpense", filteredExpenses);
   // Calculate summary from filteredExpenses
   const total = filteredExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
   const byCategory = filteredExpenses.reduce((acc, e) => {
@@ -139,82 +150,145 @@ export default function PersonalExpenseList({ expenses }) {
     return <div className="text-gray-500">No expenses for this month.</div>;
   }
 
+  async function fetchExpenses() {
+    setLoading(true);
+    try {
+      const expenseRes = await getPersonalExpenses();
+      setExpenses(expenseRes.data);
+    } catch (error) {
+      alert(error?.response?.data?.message || "Failed to fetch expenses");
+    }
+
+    setLoading(false);
+  }
+
+  const handleAddPersonalExpense = async (expense) => {
+    setLoading(true);
+    try {
+      await addPersonalExpense({ ...expense, amount: Number(expense.amount) });
+      alert("Expense added successfully");
+    } catch (error) {
+      alert(error?.response?.data?.message || "Failed to add expense");
+    }
+    await fetchExpenses();
+    setLoading(false);
+  };
+
   return (
     <>
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-        Expenses
-      </h2>
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-2">
-        <label
-          htmlFor="month"
-          className="font-semibold text-gray-700 mb-1 sm:mb-0"
+      <LoadingPopup show={loading} />
+      <div className="flex border-b mb-6">
+        <button
+          className={`px-4 py-2 font-semibold focus:outline-none ${
+            activeTab === "add"
+              ? "border-b-2 border-indigo-500 text-indigo-600 bg-white"
+              : "text-gray-500 bg-gray-100"
+          }`}
+          onClick={() => setActiveTab("add")}
+          style={{ borderTopLeftRadius: 8, borderTopRightRadius: 8 }}
         >
-          Filter by Month:
-        </label>
-        <div className="relative w-full sm:w-56">
-          <Dropdown
-            onChangeHandler={(value) => setSelectedMonth(value.value)}
-            options={[
-              { _id: "all", name: "All" },
-              ...allMonths.map((month) => ({
-                _id: month,
-                name: new Date(month + "-01").toLocaleString("default", {
-                  year: "numeric",
-                  month: "long",
-                }),
-              })),
-            ]}
-            placeholder="Select Month"
-            value={{
-              _id: selectedMonth,
-              name:
-                selectedMonth === "all"
-                  ? "All"
-                  : new Date(selectedMonth + "-01").toLocaleString("default", {
+          Add New Expense
+        </button>
+        <button
+          className={`px-4 py-2 font-semibold focus:outline-none ${
+            activeTab === "list"
+              ? "border-b-2 border-indigo-500 text-indigo-600 bg-white"
+              : "text-gray-500 bg-gray-100"
+          }`}
+          onClick={() => setActiveTab("list")}
+          style={{ borderTopLeftRadius: 8, borderTopRightRadius: 8 }}
+        >
+          Expenses List
+        </button>
+      </div>
+      {activeTab === "add" && (
+        <>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+            Add New Expense
+          </h2>
+
+          <PersonalExpenseForm onAdd={handleAddPersonalExpense} />
+        </>
+      )}
+
+      {activeTab === "list" && (
+        <>
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-2">
+            <label
+              htmlFor="month"
+              className="font-semibold text-gray-700 mb-1 sm:mb-0"
+            >
+              Filter by Month:
+            </label>
+            <div className="relative ">
+              <Dropdown
+                onChangeHandler={(value) => setSelectedMonth(value.value)}
+                options={[
+                  { _id: "all", name: "All" },
+                  ...allMonths.map((month) => ({
+                    _id: month,
+                    name: new Date(month + "-01").toLocaleString("default", {
                       year: "numeric",
                       month: "long",
                     }),
-            }}
+                  })),
+                ]}
+                placeholder="Select Month"
+                value={{
+                  _id: selectedMonth,
+                  name:
+                    selectedMonth === "all"
+                      ? "All"
+                      : new Date(selectedMonth + "-01").toLocaleString(
+                          "default",
+                          {
+                            year: "numeric",
+                            month: "long",
+                          }
+                        ),
+                }}
+              />
+            </div>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+            Expense Summary
+          </h2>
+          <button className="button-custom" onClick={handleExportPDF}>
+            Export PDF
+          </button>
+          <PersonalExpenseSummary
+            expenses={filteredExpenses}
+            byCategory={byCategory}
+            total={total}
           />
-        </div>
-      </div>
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-        Expense Summary
-      </h2>
-      <button className="button-custom" onClick={handleExportPDF}>
-        Export PDF
-      </button>
-      <PersonalExpenseSummary
-        expenses={filteredExpenses}
-        byCategory={byCategory}
-        total={total}
-      />
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-        Expenses List
-      </h2>
-      <div className="bg-white p-4 rounded shadow text-black mb-4">
-        <ul className="space-y-2">
-          {filteredExpenses.map((exp, idx) => (
-            <li
-              key={idx}
-              className="flex justify-between items-center border-b last:border-b-0 py-2 max-sm:max-w-[390px]"
-            >
-              <div className="wrap-anywhere">
-                <span className="font-medium">{exp.category}</span>
-                <span className="ml-2 text-gray-600 text-sm">
-                  {exp.note && `(${exp.note})`}
-                </span>
-                <div className="text-xs text-gray-400">
-                  {new Date(exp.date).toLocaleDateString()}
-                </div>
-              </div>
-              <span className="font-bold text-indigo-600 whitespace-nowrap">
-                INR {exp.amount}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+            Expenses List
+          </h2>
+          <div className="bg-white p-4 rounded shadow text-black mb-4">
+            <ul className="space-y-2">
+              {filteredExpenses.map((exp, idx) => (
+                <li
+                  key={idx}
+                  className="flex justify-between items-center border-b last:border-b-0 py-2 "
+                >
+                  <div className="wrap-anywhere">
+                    <span className="font-medium">{exp.category}</span>
+                    <span className="ml-2 text-gray-600 text-sm">
+                      {exp.note && `(${exp.note})`}
+                    </span>
+                    <div className="text-xs text-gray-400">
+                      {new Date(exp.date).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <span className="font-bold text-indigo-600 whitespace-nowrap">
+                    INR {exp.amount}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
     </>
   );
 }

@@ -22,11 +22,11 @@ const TABS = [
     key: "personalExpenses",
     label: "Personal Expenses",
     icon: "🧾",
-    children: [
-      { key: "addExpense", label: "Add Expense", icon: "➕" },
-      { key: "expenseList", label: "Expense List", icon: "📄" },
-      // { key: "expenseSummary", label: "Summary", icon: "📊" },
-    ],
+    // children: [
+    //   { key: "addExpense", label: "Add Expense", icon: "➕" },
+    //   { key: "expenseList", label: "Expense List", icon: "📄" },
+    //   // { key: "expenseSummary", label: "Summary", icon: "📊" },
+    // ],
   },
   {
     key: "feedback",

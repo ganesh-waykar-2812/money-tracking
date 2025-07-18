@@ -1,24 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import AddTransactionForm from "../components/AddTransactionForm";
+import PersonalExpenseList from "../components/PersonalExpenseList";
+import LoadingPopup from "../components/reusable/LoadingPopup";
+import TextInput from "../components/reusable/TextInput";
+import TransactionList from "../components/TransactionList";
 import {
-  getPeople,
-  getTransactions,
   addPerson,
   addTransaction,
-  addPersonalExpense,
-  getPersonalExpenses,
+  getPeople,
+  getTransactions,
   sendFeedback,
 } from "../services/api";
-import AddTransactionForm from "../components/AddTransactionForm";
-import PersonalExpenseForm from "../components/PersonalExpenseForm";
-import PersonalExpenseList from "../components/PersonalExpenseList";
-import PersonalExpenseSummary from "../components/PersonalExpenseSummary";
-import Summary from "../components/Summary";
-import { useNavigate } from "react-router-dom";
-import TextInput from "../components/reusable/TextInput";
-import LoadingPopup from "../components/reusable/LoadingPopup";
-import TransactionList from "../components/TransactionList";
-import Dropdown from "../components/reusable/Dropdown";
-import { REQUIRED_TOKEN_VERSION } from "../constants/globle";
 
 export default function Dashboard({
   activeTab,
@@ -37,7 +30,6 @@ export default function Dashboard({
     note: "",
   });
   const [loading, setLoading] = useState(false);
-  const [personalExpenses, setPersonalExpenses] = useState([]);
 
   const navigate = useNavigate();
 
@@ -91,37 +83,6 @@ export default function Dashboard({
     await loadData();
     setLoading(false);
   };
-
-  // Handler for adding a new expense via API
-  const handleAddPersonalExpense = async (expense) => {
-    setLoading(true);
-    try {
-      await addPersonalExpense({ ...expense, amount: Number(expense.amount) });
-      alert("Expense added successfully");
-    } catch (error) {
-      alert(error?.response?.data?.message || "Failed to add expense");
-    }
-    await fetchExpenses();
-    setLoading(false);
-  };
-
-  async function fetchExpenses() {
-    setLoading(true);
-    try {
-      const expenseRes = await getPersonalExpenses();
-      setPersonalExpenses(expenseRes.data);
-    } catch (error) {
-      alert(error?.response?.data?.message || "Failed to fetch expenses");
-    }
-
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    if (expandedSection === "personalExpenses") {
-      fetchExpenses();
-    }
-  }, [expandedSection]);
 
   const [feedback, setFeedback] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
@@ -191,31 +152,35 @@ export default function Dashboard({
               >
                 <span>{section.icon}</span>
                 <span>{section.label}</span>
-                <span className="ml-auto">
-                  {expandedSection === section.key ? "▲" : "▼"}
-                </span>
+                {section.children && section.children.length > 0 ? (
+                  <span className="ml-auto">
+                    {expandedSection === section.key ? "▲" : "▼"}
+                  </span>
+                ) : null}
               </button>
               {/* Sub-tabs: only show if this section is expanded */}
-              {expandedSection === section.key && (
-                <div className="flex flex-col gap-2 pl-4 pt-4">
-                  {section?.children?.map((tabItem) => (
-                    <button
-                      key={tabItem.key}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
-                        activeTab === tabItem.key
-                          ? "bg-indigo-400 text-white shadow"
-                          : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
-                      }`}
-                      onClick={() => {
-                        setActiveTab(tabItem.key);
-                      }}
-                    >
-                      <span>{tabItem.icon}</span>
-                      <span>{tabItem.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              {expandedSection === section.key &&
+                section.children &&
+                section.children.length > 0 && (
+                  <div className="flex flex-col gap-2 pl-4 pt-4">
+                    {section?.children?.map((tabItem) => (
+                      <button
+                        key={tabItem.key}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
+                          activeTab === tabItem.key
+                            ? "bg-indigo-400 text-white shadow"
+                            : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
+                        }`}
+                        onClick={() => {
+                          setActiveTab(tabItem.key);
+                        }}
+                      >
+                        <span>{tabItem.icon}</span>
+                        <span>{tabItem.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
             </div>
           ))}
         </div>
@@ -223,9 +188,9 @@ export default function Dashboard({
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center py-4 sm:py-8 w-full ml-0 sm:ml-0">
-        <div className="max-w-4xl max-sm:max-w-[390px] bg-white/90 rounded-2xl shadow-xl p-2 sm:p-4 md:p-8 flex flex-col min-w-[300px]">
+        <div className=" bg-white/90 rounded-2xl shadow-xl p-2 sm:p-4 md:p-8 flex flex-col min-w-[300px] w-full">
           <div className="flex-1 min-w-0">
-            {!activeTab && (
+            {!activeTab && expandedSection !== "personalExpenses" && (
               <div className="text-center py-16">
                 <h1 className="text-3xl font-bold mb-4 text-indigo-700">
                   Welcome to your Dashboard!
@@ -287,21 +252,7 @@ export default function Dashboard({
               </>
             )}
 
-            {expandedSection === "personalExpenses" && (
-              <>
-                {activeTab === "addExpense" && (
-                  <>
-                    <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-                      Add New Expense
-                    </h2>
-                    <PersonalExpenseForm onAdd={handleAddPersonalExpense} />
-                  </>
-                )}
-                {activeTab === "expenseList" && (
-                  <PersonalExpenseList expenses={personalExpenses} />
-                )}
-              </>
-            )}
+            {expandedSection === "personalExpenses" && <PersonalExpenseList />}
             {activeTab === "feedbackForm" && (
               <>
                 <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">

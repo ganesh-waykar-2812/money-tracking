@@ -45,7 +45,7 @@ export default function PersonalExpenseForm({ onAdd }) {
         onAdd(form);
         setForm({ amount: "", category: "", date: "", note: "" });
       }}
-      className="mb-4 bg-white p-4 rounded shadow text-black"
+      className="mb-4 bg-white  rounded shadow text-black"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <TextInput
