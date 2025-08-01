@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TextInput from "./reusable/TextInput";
 import Dropdown from "./reusable/Dropdown";
 
@@ -18,7 +18,7 @@ const categories = [
   "Other",
 ];
 
-export default function PersonalExpenseForm({ onAdd }) {
+export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
   const [form, setForm] = useState({
     amount: "",
     category: "",
@@ -34,52 +34,72 @@ export default function PersonalExpenseForm({ onAdd }) {
     today.setHours(0, 0, 0, 0);
     return date <= today;
   }
+  useEffect(() => {
+    if (isAdd) {
+      setForm({ amount: "", category: "", date: "", note: "" });
+    } else if (editData) {
+      setForm({
+        amount: editData.amount || "",
+        category: editData.category || "",
+        date: editData.date
+          ? new Date(editData.date).toISOString().split("T")[0]
+          : "",
+        note: editData.note || "",
+        id: editData._id || "",
+      });
+    }
+  }, [isAdd, editData]);
 
   const isDateValid = isValidDate(form.date);
   const isValid = form.amount && form.category && isDateValid;
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onAdd(form);
-        setForm({ amount: "", category: "", date: "", note: "" });
-      }}
-      className="mb-4 bg-white  rounded shadow text-black"
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <TextInput
-          value={form.amount}
-          onChangeHandler={(v) => setForm({ ...form, amount: v })}
-          placeholder="Amount"
-          inputType="number"
-        />
+    <>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+        {isAdd ? "Add New Expense" : "Edit Expense"}
+      </h2>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(form, isAdd);
+          setForm({ amount: "", category: "", date: "", note: "" });
+        }}
+        className="mb-4 bg-white  rounded shadow text-black"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <TextInput
+            value={form.amount}
+            onChangeHandler={(v) => setForm({ ...form, amount: v })}
+            placeholder="Amount"
+            inputType="number"
+          />
 
-        <Dropdown
-          onChangeHandler={(value) =>
-            setForm({ ...form, category: value.value })
-          }
-          options={categories.map((c) => ({ _id: c, name: c }))}
-          placeholder="Select Category"
-          value={{ _id: form.category, name: form.category }}
-        />
-        <TextInput
-          value={form.date}
-          onChangeHandler={(v) => setForm({ ...form, date: v })}
-          placeholder="Date"
-          inputType="date"
-        />
-        <TextInput
-          value={form.note}
-          onChangeHandler={(v) => setForm({ ...form, note: v })}
-          placeholder="Note (optional)"
-          inputType="text"
-          isRequired={false}
-        />
-      </div>
-      <button className="mt-4 w-full button-custom" disabled={!isValid}>
-        Add Expense
-      </button>
-    </form>
+          <Dropdown
+            onChangeHandler={(value) =>
+              setForm({ ...form, category: value.value })
+            }
+            options={categories.map((c) => ({ _id: c, name: c }))}
+            placeholder="Select Category"
+            value={{ _id: form.category, name: form.category }}
+          />
+          <TextInput
+            value={form.date}
+            onChangeHandler={(v) => setForm({ ...form, date: v })}
+            placeholder="Date"
+            inputType="date"
+          />
+          <TextInput
+            value={form.note}
+            onChangeHandler={(v) => setForm({ ...form, note: v })}
+            placeholder="Note (optional)"
+            inputType="text"
+            isRequired={false}
+          />
+        </div>
+        <button className="mt-4 w-full button-custom" disabled={!isValid}>
+          {isAdd ? "Add Expense" : "Update Expense"}
+        </button>
+      </form>
+    </>
   );
 }
