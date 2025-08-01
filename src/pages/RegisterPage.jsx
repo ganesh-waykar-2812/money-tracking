@@ -151,7 +151,7 @@ export default function RegisterPage({ setUserName }) {
         <LoadingPopup show={loading} />
         {/* Help Modal */}
         {showHelp && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40  overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto">
             <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full text-left text-black mt-8 relative max-h-[90vh] overflow-y-auto">
               <button
                 className="absolute top-2 right-2 text-gray-500 hover:text-black"
@@ -160,24 +160,37 @@ export default function RegisterPage({ setUserName }) {
               >
                 ×
               </button>
+
               <h2 className="text-xl font-bold mb-2">
                 How to Use Your Dashboard
               </h2>
+
               {/* What's New Section */}
-              <div className="mb-4 p-3 rounded bg-indigo-50 border border-indigo-200 ">
+              <div className="mb-4 p-3 rounded bg-indigo-50 border border-indigo-200">
                 <h3 className="font-semibold text-indigo-700 mb-1">
                   🚀 What's New
                 </h3>
                 <ul className="list-disc ml-5 text-indigo-800 text-base space-y-1">
+                  {" "}
                   <li>
-                    <b>UI Improvement</b> for transactions list and expense list
+                    <b>End-to-End Encryption:</b> Personal expenses are securely
+                    encrypted so only you can view them.
                   </li>
                   <li>
-                    <b>Sorting</b> Now transaction and expenses sorted by
-                    decending order of date.
+                    <b>Edit & Delete:</b> You can now easily edit or remove your
+                    personal expenses from the list.
+                  </li>
+                  <li>
+                    <b>UI Improvement:</b> Enhanced visual layout for the
+                    transaction and expense lists.
+                  </li>
+                  <li>
+                    <b>Sorting:</b> Both transactions and expenses are now
+                    sorted in descending order of date.
                   </li>
                 </ul>
               </div>
+
               <ul className="list-disc ml-5 space-y-2 text-base">
                 <li>
                   <b>Welcome Screen:</b> When you log in, you'll see a welcome

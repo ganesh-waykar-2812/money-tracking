@@ -201,7 +201,31 @@ export default function Dashboard({
                 </p>
                 <p className="text-md text-gray-500">
                   Click a section on the left to get started.
-                </p>
+                </p>{" "}
+                <div className="mb-4 p-3 rounded bg-indigo-50 border border-indigo-200">
+                  <h3 className="font-semibold text-indigo-700 mb-1">
+                    🚀 What's New
+                  </h3>
+                  <ul className="list-disc ml-5 text-indigo-800 text-base space-y-1">
+                    {" "}
+                    <li>
+                      <b>End-to-End Encryption:</b> Personal expenses are
+                      securely encrypted so only you can view them.
+                    </li>
+                    <li>
+                      <b>Edit & Delete:</b> You can now easily edit or remove
+                      your personal expenses from the list.
+                    </li>
+                    <li>
+                      <b>UI Improvement:</b> Enhanced visual layout for the
+                      transaction and expense lists.
+                    </li>
+                    <li>
+                      <b>Sorting:</b> Both transactions and expenses are now
+                      sorted in descending order of date.
+                    </li>
+                  </ul>
+                </div>
               </div>
             )}
             {activeTab === "addPerson" && (
