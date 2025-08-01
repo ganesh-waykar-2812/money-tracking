@@ -45,6 +45,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
+    localStorage.removeItem("masterKey");
     window.location.href = "/register";
     setUserName("");
     setActiveTab(null);
@@ -56,6 +57,7 @@ function App() {
     if (storedVersion !== REQUIRED_TOKEN_VERSION) {
       localStorage.removeItem("token");
       localStorage.removeItem("userName");
+      localStorage.removeItem("masterKey");
       // window.location.href = "/register";
       setUserName("");
       setActiveTab(null);
