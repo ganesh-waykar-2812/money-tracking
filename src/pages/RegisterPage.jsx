@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { login, register, updateMasterKey } from "../services/api";
+import {
+  login,
+  migrateUserDataAPI,
+  register,
+  updateMasterKey,
+} from "../services/api";
 import { useNavigate } from "react-router-dom";
 import TextInput from "../components/reusable/TextInput";
 import LoadingPopup from "../components/reusable/LoadingPopup";
@@ -25,6 +30,9 @@ export default function RegisterPage({ setUserName }) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [pendingMasterKey, setPendingMasterKey] = useState(null);
 
+  const [showMigrationModal, setShowMigrationModal] = useState(false);
+  const [migrationLoading, setMigrationLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true); // <-- Start loading
@@ -38,26 +46,34 @@ export default function RegisterPage({ setUserName }) {
     if (activeTab === "Login") {
       try {
         const res = await login(form);
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("userName", res.data.user.name); // Save user name
-        localStorage.setItem("tokenVersion", REQUIRED_TOKEN_VERSION);
-        if (res.data.user.masterKey) {
-          localStorage.setItem(
-            "masterKey",
-            decryptMasterKey(res.data.user.masterKey, form.password)
-          );
-        } else if (res.data) {
-          // Existing user without master key: prompt to generate and save one
-          setPendingMasterKey({
-            mk: CryptoJS.lib.WordArray.random(32).toString(),
-            password: form.password,
-          });
-          setShowUpgradeModal(true);
-          setLoading(false);
-          return;
+        if (res.data.isMigrationRequired) {
+          console.log("Migration required for user");
+          setShowMigrationModal(true);
+          localStorage.setItem("token", res.data.token);
+
+          // Store any info needed for migration (e.g., encryptedMasterKey, etc.)
+        } else {
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("userName", res.data.user.name); // Save user name
+          localStorage.setItem("tokenVersion", REQUIRED_TOKEN_VERSION);
+          if (res.data.user.masterKey) {
+            localStorage.setItem(
+              "masterKey",
+              decryptMasterKey(res.data.user.masterKey, form.password)
+            );
+          } else if (res.data) {
+            // Existing user without master key: prompt to generate and save one
+            setPendingMasterKey({
+              mk: CryptoJS.lib.WordArray.random(32).toString(),
+              password: form.password,
+            });
+            setShowUpgradeModal(true);
+            setLoading(false);
+            return;
+          }
+          setUserName(res.data.user.name); // Update state in App
+          navigate("/");
         }
-        setUserName(res.data.user.name); // Update state in App
-        navigate("/");
       } catch (error) {
         alert(error?.response?.data?.message);
       }
@@ -92,8 +108,53 @@ export default function RegisterPage({ setUserName }) {
     }
   }, []);
 
+  // Migration handler
+  const handleMigrateData = async () => {
+    setMigrationLoading(true);
+    try {
+      // Call migration API (implement in backend)
+      await migrateUserDataAPI({
+        password: loginForm.password,
+        email: loginForm.email,
+      }); // You need to implement this
+      alert("Migration successful! Please log in again.");
+      setShowMigrationModal(false);
+
+      // Reload or redirect as needed
+    } catch (error) {
+      alert("Migration failed. Please try again.");
+    }
+    setMigrationLoading(false);
+  };
+
   return (
     <>
+      <Modal
+        show={showMigrationModal}
+        onClose={() => setShowMigrationModal(false)}
+        title="Data Migration Required"
+      >
+        <p className="mb-4">
+          Your account's data needs to be migrated for improved security. This
+          process will re-encrypt your data with your new master key.
+        </p>
+        <div className="flex justify-center gap-4 mt-4">
+          <button
+            className="button-custom px-6 py-2"
+            onClick={handleMigrateData}
+            disabled={migrationLoading}
+          >
+            {migrationLoading ? "Migrating..." : "Migrate Now"}
+          </button>
+          <button
+            className="button-custom bg-gray-200 text-gray-700 px-6 py-2"
+            onClick={() => setShowMigrationModal(false)}
+            disabled={migrationLoading}
+          >
+            Cancel
+          </button>
+        </div>
+      </Modal>
       <Modal
         show={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
@@ -117,7 +178,10 @@ export default function RegisterPage({ setUserName }) {
 
                 localStorage.setItem(
                   "masterKey",
-                  response?.data?.user.masterKey
+                  decryptMasterKey(
+                    response?.data?.user.masterKey,
+                    pendingMasterKey.password
+                  )
                 );
                 setShowUpgradeModal(false);
                 setLoading(false);

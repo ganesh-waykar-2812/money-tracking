@@ -36,6 +36,8 @@ export const register = (data) => API.post("/auth/register", data);
 export const login = (data) => API.post("/auth/login", data);
 export const updateMasterKey = (data) =>
   API.put("/auth/update-master-key", data);
+export const migrateUserDataAPI = (data) =>
+  API.post("/user/migrate-data", data);
 
 export const getPeople = () => API.get("/persons");
 export const addPerson = (data) => API.post("/persons", data);
@@ -53,4 +55,5 @@ export const deletePersonalExpense = (id) =>
 export const updatePersonalExpense = (id, data) =>
   API.put(`/personal-expenses/${id}`, data);
 
+// feedback
 export const sendFeedback = (data) => API.post("/feedback", data);
