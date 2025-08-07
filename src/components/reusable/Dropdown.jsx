@@ -6,7 +6,6 @@ function Dropdown({
   options = [],
   placeholder = "Select an option",
 }) {
-  console.log("value", value, placeholder);
   return (
     <select
       onChange={(e) => onChangeHandler({ value: e.target.value })}

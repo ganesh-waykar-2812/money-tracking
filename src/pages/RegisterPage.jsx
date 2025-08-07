@@ -39,15 +39,13 @@ export default function RegisterPage({ setUserName }) {
     const form = activeTab === "Sign Up" ? registerForm : loginForm;
     const createEncryptedMasterKey = () => {
       const mk = CryptoJS.lib.WordArray.random(32).toString(); // generate master key
-      console.log("Generated Master Key:", mk);
-      console.log("Password:", form.password);
+
       return encryptMasterKey(mk, form.password);
     };
     if (activeTab === "Login") {
       try {
         const res = await login(form);
         if (res.data.isMigrationRequired) {
-          console.log("Migration required for user");
           setShowMigrationModal(true);
           localStorage.setItem("token", res.data.token);
 
@@ -84,7 +82,7 @@ export default function RegisterPage({ setUserName }) {
     // Handle registration logic here
     try {
       const encryptedMasterKey = createEncryptedMasterKey();
-      console.log("Encrypted Master Key: register", encryptedMasterKey);
+
       const payload = {
         ...form,
         encryptedMasterKey,

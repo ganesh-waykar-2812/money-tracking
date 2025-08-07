@@ -107,12 +107,12 @@ export default function Header({
         <div className="flex items-center gap-3 md:text-lg font-bold text-white tracking-wide drop-shadow sm:text-sm xs:text-xs ">
           <span
             role="img"
-            aria-label="Lend & Borrow"
+            aria-label="Money Tracker"
             className="text-2xl sm:text-3xl"
           >
-            🤝
+            💰
           </span>
-          Lend & Borrow
+          Money Tracker
         </div>
       </div>
 
