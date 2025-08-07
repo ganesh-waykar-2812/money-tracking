@@ -309,6 +309,9 @@ export default function Dashboard({
 
           <LoadingPopup show={loading} />
         </div>
+        <footer className="text-center text-gray-400 text-sm mt-8 mb-2">
+          Money Tracker &copy; 2025 Ganesh Waykar
+        </footer>
       </main>
     </div>
   );

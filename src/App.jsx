@@ -8,13 +8,12 @@ import { REQUIRED_TOKEN_VERSION } from "./constants/globle";
 
 const TABS = [
   {
-    key: "lendBorrow",
-    label: "Lend & Borrow",
-    icon: "🤝",
+    key: "money",
+    label: "Money Tracker",
+    icon: "💰",
     children: [
       { key: "addPerson", label: "Add Person", icon: "➕" },
       { key: "addTransaction", label: "Create Transaction", icon: "💸" },
-      // { key: "summary", label: "Summary", icon: "📊" },
       { key: "transactions", label: "Transactions List", icon: "📋" },
     ],
   },
@@ -22,11 +21,6 @@ const TABS = [
     key: "personalExpenses",
     label: "Personal Expenses",
     icon: "🧾",
-    // children: [
-    //   { key: "addExpense", label: "Add Expense", icon: "➕" },
-    //   { key: "expenseList", label: "Expense List", icon: "📄" },
-    //   // { key: "expenseSummary", label: "Summary", icon: "📊" },
-    // ],
   },
   {
     key: "feedback",
