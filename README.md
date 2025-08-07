@@ -17,6 +17,12 @@ A modern personal finance app for tracking lending, borrowing, transactions, and
 3. Add your backend URL to `.env`
 4. Run `npm run dev`
 
+## Author
+
+**Ganesh Waykar**  
+[GitHub Profile](https://github.com/ganesh-waykar-2812)  
+Email: ganeshwaykar2812@gmail.com
+
 ## License
 
 MIT
