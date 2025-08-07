@@ -53,7 +53,6 @@ function App() {
   };
   const storedVersion = localStorage.getItem("tokenVersion") || "";
   useEffect(() => {
-    console.log("inside useEffect");
     if (storedVersion !== REQUIRED_TOKEN_VERSION) {
       localStorage.removeItem("token");
       localStorage.removeItem("userName");

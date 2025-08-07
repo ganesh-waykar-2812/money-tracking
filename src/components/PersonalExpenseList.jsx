@@ -163,11 +163,17 @@ export default function PersonalExpenseList() {
       const masterKey = localStorage.getItem("masterKey");
       let decryptedExpenses = expenseRes.data;
       if (masterKey) {
-        decryptedExpenses = expenseRes.data.map((exp) => ({
-          ...exp,
-          amount: exp.amount ? Number(safeDecrypt(exp.amount, masterKey)) : 0,
-          note: exp.note ? safeDecrypt(exp.note, masterKey) : "",
-        }));
+        decryptedExpenses = expenseRes.data.map((exp) => {
+          const shouldDecrypt = exp.amount !== "" && isNaN(Number(exp.amount));
+          if (!shouldDecrypt) {
+            return exp; // No decryption needed
+          }
+          return {
+            ...exp,
+            amount: exp.amount ? Number(safeDecrypt(exp.amount, masterKey)) : 0,
+            note: exp.note ? safeDecrypt(exp.note, masterKey) : "",
+          };
+        });
       }
 
       setExpenses(decryptedExpenses);

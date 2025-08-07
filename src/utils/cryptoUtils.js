@@ -13,7 +13,7 @@ export function encryptMasterKey(masterKey, password) {
   const encrypted = CryptoJS.AES.encrypt(masterKey, derivedKey, {
     iv,
   }).toString();
-  console.log("encryptMasterKey", encrypted, iv.toString(CryptoJS.enc.Hex));
+
   return JSON.stringify({
     ciphertext: encrypted,
     iv: iv.toString(CryptoJS.enc.Hex),
@@ -27,7 +27,7 @@ export function decryptMasterKey(encryptedMasterKey, password) {
   const decrypted = CryptoJS.AES.decrypt(ciphertext, derivedKey, {
     iv: CryptoJS.enc.Hex.parse(iv),
   });
-  console.log("decryptMasterKey", decrypted.toString(CryptoJS.enc.Utf8));
+
   return decrypted.toString(CryptoJS.enc.Utf8);
 }
 
