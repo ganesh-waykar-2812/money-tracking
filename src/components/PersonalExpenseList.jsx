@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import PersonalExpenseSummary from "./PersonalExpenseSummary";
 import Dropdown from "./reusable/Dropdown";
 import {
@@ -37,26 +37,38 @@ export default function PersonalExpenseList() {
     fetchExpenses();
   }, []);
 
-  const filteredExpenses =
-    selectedMonth === "all"
+  const filteredExpenses = useMemo(() => {
+    return selectedMonth === "all"
       ? expenses
       : expenses.filter((exp) => {
           if (!exp.date) return false;
           const [year, month] = exp.date.split("-");
           return `${year}-${month}` === selectedMonth;
         });
+  }, [expenses, selectedMonth]);
   // Get unique months from expenses
-  const allMonths = Array.from(
-    new Set(expenses.map((exp) => exp.date?.slice(0, 7)).filter(Boolean))
-  )
-    .sort()
-    .reverse();
+  const allMonths = useMemo(
+    () =>
+      Array.from(
+        new Set(expenses.map((exp) => exp.date?.slice(0, 7)).filter(Boolean))
+      )
+        .sort()
+        .reverse(),
+    [expenses]
+  );
 
-  const total = filteredExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
-  const byCategory = filteredExpenses.reduce((acc, e) => {
-    acc[e.category] = (acc[e.category] || 0) + Number(e.amount);
-    return acc;
-  }, {});
+  const total = useMemo(
+    () => filteredExpenses.reduce((sum, e) => sum + Number(e.amount), 0),
+    [filteredExpenses]
+  );
+  const byCategory = useMemo(
+    () =>
+      filteredExpenses.reduce((acc, e) => {
+        acc[e.category] = (acc[e.category] || 0) + Number(e.amount);
+        return acc;
+      }, {}),
+    [filteredExpenses]
+  );
 
   const handleExportPDF = () => {
     const doc = new jsPDF({ orientation: "landscape" });
