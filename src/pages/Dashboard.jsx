@@ -320,7 +320,10 @@ export default function Dashboard({
                       🚀 What's New
                     </h3>
                     <ul className="list-disc ml-5 text-indigo-800 text-base space-y-1">
-                      {" "}
+                      <li>
+                        <b>Personal Expenses:</b> You can now get notification
+                        for fill the personal expenses.
+                      </li>
                       <li>
                         <b>End-to-End Encryption:</b> Personal expenses are
                         securely encrypted so only you can view them.
