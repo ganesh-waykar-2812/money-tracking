@@ -57,3 +57,7 @@ export const updatePersonalExpense = (id, data) =>
 
 // feedback
 export const sendFeedback = (data) => API.post("/feedback", data);
+
+// Push Notification Subscription API
+export const saveSubscription = (data) => API.post("/subscription", data);
+export const deleteSubscription = () => API.delete("/subscription");
