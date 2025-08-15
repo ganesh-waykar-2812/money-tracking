@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { REQUIRED_TOKEN_VERSION } from "./constants/globle";
+import { deleteSubscription } from "./services/api";
 
 const TABS = [
   {
@@ -36,11 +37,26 @@ function App() {
   const [activeTab, setActiveTab] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      if (subscription) {
+        await subscription.unsubscribe();
+
+        await deleteSubscription(); // Call API to remove subscription from backend
+      }
+    } catch (error) {
+      console.error("Failed to unsubscribe from push notifications:", error);
+    }
+
+    // Clear local storage
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
     localStorage.removeItem("masterKey");
-    window.location.href = "/register";
+
+    // Reset UI state
     setUserName("");
     setActiveTab(null);
     setSidebarOpen(false);

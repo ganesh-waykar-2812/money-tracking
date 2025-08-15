@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AddTransactionForm from "../components/AddTransactionForm";
 import PersonalExpenseList from "../components/PersonalExpenseList";
 import LoadingPopup from "../components/reusable/LoadingPopup";
+import Modal from "../components/reusable/Modal";
 import TextInput from "../components/reusable/TextInput";
 import TransactionList from "../components/TransactionList";
 import {
@@ -10,8 +11,10 @@ import {
   addTransaction,
   getPeople,
   getTransactions,
+  saveSubscription,
   sendFeedback,
 } from "../services/api";
+import { VAPID_PUBLIC_KEY } from "../constants/globle";
 
 export default function Dashboard({
   activeTab,
@@ -126,193 +129,309 @@ export default function Dashboard({
     return summaryByPerson;
   }, [transactions]);
 
+  function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+  }
+
+  async function subscribeUser() {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      const reg = await navigator.serviceWorker.register("../sw.js");
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+      // Send subscription and userId to backend
+
+      await saveSubscription({ subscription });
+    }
+  }
+
+  const checkNotificationStatus = () => {
+    if (!("Notification" in window)) {
+      alert("This browser does not support desktop notification");
+      return;
+    }
+    return Notification.permission; // "granted", "denied", or "default"
+  };
+
+  const enableNotification = async () => {
+    const currentStatus = checkNotificationStatus();
+
+    if (currentStatus === "granted") {
+      subscribeUser();
+      return;
+    }
+    if (currentStatus === "denied") {
+      alert(
+        "You have denied notifications. You can enable them in your browser settings."
+      );
+      return;
+    }
+    console.log("Requesting notification permission...");
+    const permission = await Notification.requestPermission();
+    console.log("Notification Permission:", permission);
+
+    if (permission === "granted") {
+      subscribeUser();
+    }
+  };
+  const [isNotificationConfirmationOpen, setIsNotificationConfirmationOpen] =
+    useState(false);
+
+  useEffect(() => {
+    const registerAndCheck = async () => {
+      if ("serviceWorker" in navigator) {
+        await navigator.serviceWorker.register("/sw.js");
+
+        const readyReg = await navigator.serviceWorker.ready;
+
+        const existingSubscription =
+          await readyReg.pushManager.getSubscription();
+
+        if (!existingSubscription) {
+          setIsNotificationConfirmationOpen(true);
+        }
+      }
+    };
+    registerAndCheck();
+  }, []);
+
   return (
-    <div className=" w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex font-sans relative">
-      <aside
-        className={`
+    <>
+      <Modal
+        show={isNotificationConfirmationOpen}
+        onClose={() => {
+          setIsNotificationConfirmationOpen(false);
+        }}
+        title="Enable Notifications?"
+      >
+        <div>
+          <p>
+            We'd like to send you daily reminders at 9 PM to fill your expenses.
+            Do you want to enable notifications?
+          </p>
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              className="button-custom"
+              onClick={() => {
+                setIsNotificationConfirmationOpen(false);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="button-custom"
+              onClick={async () => {
+                const response = await enableNotification();
+                if (response) {
+                  alert("Notifications enabled successfully!");
+                }
+                console.log("Notifications enabled:", response);
+                setIsNotificationConfirmationOpen(false);
+              }}
+            >
+              Yes
+            </button>
+          </div>
+        </div>
+      </Modal>
+      <div className=" w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex font-sans relative">
+        <aside
+          className={`
           fixed top-16 hidden left-0 h-[calc(100vh-4rem)] z-20 bg-white/90 shadow-lg rounded-r-2xl p-4 min-w-[180px] max-w-[260px]
           flex-col gap-2 transition-transform duration-300 sm:static sm:translate-x-0 sm:flex sm:mt-8 sm:ml-4 sm:h-fit 
         `}
-      >
-        <div className="flex flex-col gap-2">
-          {tabs.map((section) => (
-            <div key={section.key}>
-              <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition text-left w-full ${
-                  expandedSection === section.key
-                    ? "bg-indigo-500 text-white shadow"
-                    : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
-                }`}
-                onClick={() => {
-                  setExpandedSection(
-                    expandedSection === section.key ? null : section.key
-                  );
-                  setActiveTab(null); // default to first sub-tab
-                }}
-              >
-                <span>{section.icon}</span>
-                <span>{section.label}</span>
-                {section.children && section.children.length > 0 ? (
-                  <span className="ml-auto">
-                    {expandedSection === section.key ? "▲" : "▼"}
-                  </span>
-                ) : null}
-              </button>
-              {/* Sub-tabs: only show if this section is expanded */}
-              {expandedSection === section.key &&
-                section.children &&
-                section.children.length > 0 && (
-                  <div className="flex flex-col gap-2 pl-4 pt-4">
-                    {section?.children?.map((tabItem) => (
-                      <button
-                        key={tabItem.key}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
-                          activeTab === tabItem.key
-                            ? "bg-indigo-400 text-white shadow"
-                            : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
-                        }`}
-                        onClick={() => {
-                          setActiveTab(tabItem.key);
-                        }}
-                      >
-                        <span>{tabItem.icon}</span>
-                        <span>{tabItem.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-            </div>
-          ))}
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center py-4 sm:py-8 w-full ml-0 sm:ml-0">
-        <div className=" bg-white/90 rounded-2xl shadow-xl p-2 sm:p-4 md:p-8 flex flex-col min-w-[300px] w-full">
-          <div className="flex-1 min-w-0">
-            {!activeTab && expandedSection !== "personalExpenses" && (
-              <div className="text-center py-16">
-                <h1 className="text-3xl font-bold mb-4 text-indigo-700">
-                  Welcome to your Dashboard!
-                </h1>
-                <p className="text-lg text-gray-700 mb-2">
-                  Use the sidebar to navigate between Lend & Borrow, Personal
-                  Expenses, and Feedback.
-                </p>
-                <p className="text-md text-gray-500">
-                  Click a section on the left to get started.
-                </p>{" "}
-                <div className="mb-4 p-3 rounded bg-indigo-50 border border-indigo-200">
-                  <h3 className="font-semibold text-indigo-700 mb-1">
-                    🚀 What's New
-                  </h3>
-                  <ul className="list-disc ml-5 text-indigo-800 text-base space-y-1">
-                    {" "}
-                    <li>
-                      <b>End-to-End Encryption:</b> Personal expenses are
-                      securely encrypted so only you can view them.
-                    </li>
-                    <li>
-                      <b>Edit & Delete:</b> You can now easily edit or remove
-                      your personal expenses from the list.
-                    </li>
-                    <li>
-                      <b>UI Improvement:</b> Enhanced visual layout for the
-                      transaction and expense lists.
-                    </li>
-                    <li>
-                      <b>Sorting:</b> Both transactions and expenses are now
-                      sorted in descending order of date.
-                    </li>
-                  </ul>
-                </div>
+        >
+          <div className="flex flex-col gap-2">
+            {tabs.map((section) => (
+              <div key={section.key}>
+                <button
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition text-left w-full ${
+                    expandedSection === section.key
+                      ? "bg-indigo-500 text-white shadow"
+                      : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
+                  }`}
+                  onClick={() => {
+                    setExpandedSection(
+                      expandedSection === section.key ? null : section.key
+                    );
+                    setActiveTab(null); // default to first sub-tab
+                  }}
+                >
+                  <span>{section.icon}</span>
+                  <span>{section.label}</span>
+                  {section.children && section.children.length > 0 ? (
+                    <span className="ml-auto">
+                      {expandedSection === section.key ? "▲" : "▼"}
+                    </span>
+                  ) : null}
+                </button>
+                {/* Sub-tabs: only show if this section is expanded */}
+                {expandedSection === section.key &&
+                  section.children &&
+                  section.children.length > 0 && (
+                    <div className="flex flex-col gap-2 pl-4 pt-4">
+                      {section?.children?.map((tabItem) => (
+                        <button
+                          key={tabItem.key}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
+                            activeTab === tabItem.key
+                              ? "bg-indigo-400 text-white shadow"
+                              : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
+                          }`}
+                          onClick={() => {
+                            setActiveTab(tabItem.key);
+                          }}
+                        >
+                          <span>{tabItem.icon}</span>
+                          <span>{tabItem.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
               </div>
-            )}
-            {activeTab === "addPerson" && (
-              <>
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-                  Add new person
-                </h2>
-                <div className="mb-8 bg-white p-4 rounded-xl shadow text-black">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <TextInput
-                      value={personName}
-                      onChangeHandler={setPersonName}
-                      placeholder="Name"
-                      inputType="text"
+            ))}
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col items-center py-4 sm:py-8 w-full ml-0 sm:ml-0">
+          <div className=" bg-white/90 rounded-2xl shadow-xl p-2 sm:p-4 md:p-8 flex flex-col min-w-[300px] w-full">
+            <div className="flex-1 min-w-0">
+              {!activeTab && expandedSection !== "personalExpenses" && (
+                <div className="text-center py-16">
+                  <h1 className="text-3xl font-bold mb-4 text-indigo-700">
+                    Welcome to your Dashboard!
+                  </h1>
+                  <p className="text-lg text-gray-700 mb-2">
+                    Use the sidebar to navigate between Lend & Borrow, Personal
+                    Expenses, and Feedback.
+                  </p>
+                  <p className="text-md text-gray-500">
+                    Click a section on the left to get started.
+                  </p>{" "}
+                  <div className="mb-4 p-3 rounded bg-indigo-50 border border-indigo-200">
+                    <h3 className="font-semibold text-indigo-700 mb-1">
+                      🚀 What's New
+                    </h3>
+                    <ul className="list-disc ml-5 text-indigo-800 text-base space-y-1">
+                      <li>
+                        <b>Personal Expenses:</b> You can now get notification
+                        for fill the personal expenses.
+                      </li>
+                      <li>
+                        <b>End-to-End Encryption:</b> Personal expenses are
+                        securely encrypted so only you can view them.
+                      </li>
+                      <li>
+                        <b>Edit & Delete:</b> You can now easily edit or remove
+                        your personal expenses from the list.
+                      </li>
+                      <li>
+                        <b>UI Improvement:</b> Enhanced visual layout for the
+                        transaction and expense lists.
+                      </li>
+                      <li>
+                        <b>Sorting:</b> Both transactions and expenses are now
+                        sorted in descending order of date.
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+              {activeTab === "addPerson" && (
+                <>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+                    Add new person
+                  </h2>
+                  <div className="mb-8 bg-white p-4 rounded-xl shadow text-black">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <TextInput
+                        value={personName}
+                        onChangeHandler={setPersonName}
+                        placeholder="Name"
+                        inputType="text"
+                      />
+                      <button
+                        onClick={handleAddPerson}
+                        className="button-custom"
+                        disabled={!personName}
+                      >
+                        Add Person
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activeTab === "addTransaction" && (
+                <>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+                    Create Transaction
+                  </h2>
+                  <AddTransactionForm
+                    people={people}
+                    handleAddTxn={handleAddTxn}
+                    form={form}
+                    setForm={setForm}
+                  />
+                </>
+              )}
+
+              {activeTab === "transactions" && (
+                <>
+                  <TransactionList
+                    transactions={transactions}
+                    summary={summary}
+                  />
+                </>
+              )}
+
+              {expandedSection === "personalExpenses" && (
+                <PersonalExpenseList />
+              )}
+              {activeTab === "feedbackForm" && (
+                <>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+                    Feedback
+                  </h2>
+                  <div className="bg-white p-4 rounded shadow text-black">
+                    <p>
+                      We would love to hear your feedback! Please type your
+                      message and send it.
+                    </p>
+                    <textarea
+                      className="w-full p-2 border border-gray-300 rounded mt-2"
+                      rows="4"
+                      placeholder="Type your feedback here..."
+                      value={feedback}
+                      onChange={(e) => setFeedback(e.target.value)}
+                      disabled={feedbackLoading}
                     />
                     <button
-                      onClick={handleAddPerson}
-                      className="button-custom"
-                      disabled={!personName}
+                      className="mt-2 button-custom"
+                      onClick={handleSendFeedback}
+                      disabled={feedbackLoading || !feedback.trim()}
                     >
-                      Add Person
+                      {feedbackLoading ? "Sending..." : "Send Feedback"}
                     </button>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
 
-            {activeTab === "addTransaction" && (
-              <>
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-                  Create Transaction
-                </h2>
-                <AddTransactionForm
-                  people={people}
-                  handleAddTxn={handleAddTxn}
-                  form={form}
-                  setForm={setForm}
-                />
-              </>
-            )}
-
-            {activeTab === "transactions" && (
-              <>
-                <TransactionList
-                  transactions={transactions}
-                  summary={summary}
-                />
-              </>
-            )}
-
-            {expandedSection === "personalExpenses" && <PersonalExpenseList />}
-            {activeTab === "feedbackForm" && (
-              <>
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-                  Feedback
-                </h2>
-                <div className="bg-white p-4 rounded shadow text-black">
-                  <p>
-                    We would love to hear your feedback! Please type your
-                    message and send it.
-                  </p>
-                  <textarea
-                    className="w-full p-2 border border-gray-300 rounded mt-2"
-                    rows="4"
-                    placeholder="Type your feedback here..."
-                    value={feedback}
-                    onChange={(e) => setFeedback(e.target.value)}
-                    disabled={feedbackLoading}
-                  />
-                  <button
-                    className="mt-2 button-custom"
-                    onClick={handleSendFeedback}
-                    disabled={feedbackLoading || !feedback.trim()}
-                  >
-                    {feedbackLoading ? "Sending..." : "Send Feedback"}
-                  </button>
-                </div>
-              </>
-            )}
+            <LoadingPopup show={loading} />
           </div>
-
-          <LoadingPopup show={loading} />
-        </div>
-        <footer className="text-center text-gray-400 text-sm mt-8 mb-2">
-          Money Tracker &copy; 2025 Ganesh Waykar
-        </footer>
-      </main>
-    </div>
+          <footer className="text-center text-gray-400 text-sm mt-8 mb-2">
+            Money Tracker &copy; 2025 Ganesh Waykar
+          </footer>
+        </main>
+      </div>
+    </>
   );
 }
