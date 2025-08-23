@@ -377,7 +377,7 @@ export default function PersonalExpenseList() {
       </Modal>
 
       {/* Filter + Export */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sticky top-0 bg-white z-[1] p-2 sm:p-4 md:p-8 ">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sticky top-0 bg-white z-[1] py-1 ">
         <div className="flex gap-2">
           <Dropdown
             label="Filter by Month"
@@ -414,11 +414,11 @@ export default function PersonalExpenseList() {
       </div>
 
       {/* Expense Summary */}
-      <div className="p-2 sm:p-4 md:p-8 flex flex-col ">
+      <div className=" flex flex-col ">
         <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight">
           Expense Summary
         </h2>
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-8">
+        <div className="bg-white rounded-xl shadow-sm  ">
           <PersonalExpenseSummary
             expenses={filteredExpenses}
             byCategory={byCategory}
@@ -428,12 +428,12 @@ export default function PersonalExpenseList() {
 
         {/* Expense List */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl text-gray-900 tracking-tight font-semibold">
+          <h2 className="text-xl text-gray-900 tracking-tight font-semibold mt-1">
             Expenses List
           </h2>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+        <div className="bg-white rounded-xl shadow-sm ">
           {filteredExpenses.length === 0 ? (
             <p className="text-gray-500 text-center py-6">
               No expenses found for this month.
@@ -443,43 +443,45 @@ export default function PersonalExpenseList() {
               {filteredExpenses.map((exp, idx) => (
                 <li
                   key={idx}
-                  className="flex justify-between items-center py-3 hover:bg-gray-50 rounded-lg px-2 transition"
+                  className="flex justify-between items-center py-2 hover:bg-gray-50 rounded-lg px-2 transition "
                 >
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-gray-800">
                         {exp.category}
+                      </span>{" "}
+                      <span className="text-xs text-gray-400">
+                        {new Date(exp.date).toLocaleDateString()}
                       </span>
-                      {exp.note && (
-                        <span className="text-gray-500 text-sm flex wrap-anywhere">
-                          ({exp.note})
-                        </span>
-                      )}
                     </div>
-                    <span className="text-xs text-gray-400">
-                      {new Date(exp.date).toLocaleDateString()}
-                    </span>
+
+                    {exp.note && (
+                      <span className="text-gray-500 text-sm flex wrap-anywhere pr-1">
+                        ({exp.note})
+                      </span>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1 flex-col">
                     <span className="font-semibold text-indigo-600 whitespace-nowrap">
                       INR {exp.amount}
                     </span>
-
-                    <button
-                      onClick={() => handleEdit(exp)}
-                      className="text-blue-500 hover:text-blue-700 transition"
-                      title="Edit"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(exp)}
-                      className="text-red-500 hover:text-red-700 transition"
-                      title="Delete"
-                    >
-                      <FaTrash />
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleEdit(exp)}
+                        className="text-blue-500 hover:text-blue-700 transition"
+                        title="Edit"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(exp)}
+                        className="text-red-500 hover:text-red-700 transition"
+                        title="Delete"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   </div>
                 </li>
               ))}
