@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import { addPerson, addTransaction } from "../services/api";
-import TextInput from "./reusable/TextInput";
+import { Button } from "./reusable/Button";
 import Dropdown from "./reusable/Dropdown";
+import TextInput from "./reusable/TextInput";
 
 const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
   const transactionOptions = [
@@ -36,7 +35,7 @@ const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Dropdown
           onChangeHandler={(value) => {
-            setForm({ ...form, personId: value.value });
+            setForm({ ...form, personId: value._id });
           }}
           options={people}
           placeholder="Select Person"
@@ -54,7 +53,9 @@ const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
         />
 
         <Dropdown
-          onChangeHandler={(value) => setForm({ ...form, type: value.value })}
+          onChangeHandler={(value) => {
+            setForm({ ...form, type: value._id });
+          }}
           options={transactionOptions}
           placeholder="Select Transaction Type"
           value={{
@@ -71,9 +72,9 @@ const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
           isRequired={false}
         />
       </div>
-      <button className="mt-4 w-full button-custom" disabled={!isFormValid}>
+      <Button className="mt-4 w-full" disabled={!isFormValid}>
         Add Transaction
-      </button>
+      </Button>
     </form>
   );
 };

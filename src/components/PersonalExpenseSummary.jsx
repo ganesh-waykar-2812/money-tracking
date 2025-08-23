@@ -1,10 +1,6 @@
 import React from "react";
 
-export default function PersonalExpenseSummary({
-  expenses,
-  total,
-  byCategory,
-}) {
+function PersonalExpenseSummary({ expenses, total, byCategory }) {
   if (!expenses || expenses.length === 0) return null;
 
   return (
@@ -26,3 +22,4 @@ export default function PersonalExpenseSummary({
     </div>
   );
 }
+export default PersonalExpenseSummary;

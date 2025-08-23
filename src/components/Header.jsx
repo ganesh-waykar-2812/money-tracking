@@ -10,7 +10,7 @@ export default function Header({
   setExpandedSection,
 }) {
   return (
-    <header className="w-full flex flex-row items-center sm:items-stretch justify-between px-4 py-3 sm:px-8 sm:py-5 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 shadow-lg rounded-b-2xl relative">
+    <header className="flex flex-row items-center sm:items-stretch justify-between px-4 py-3 sm:px-8 sm:py-5 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 shadow-lg rounded-b-2xl relative shrink-0">
       {/* Sidebar Toggle Button (mobile only) */}
       {userName && onSidebarToggle && (
         <button
@@ -36,7 +36,7 @@ export default function Header({
 
       <aside
         className={`
-          fixed sm:hidden top-16 left-0 h-[calc(100vh-4rem)] z-20 bg-white/90 shadow-lg rounded-r-2xl p-4 min-w-[180px] max-w-[260px]
+          fixed sm:hidden top-16 left-0 h-[calc(100vh-4rem)] z-20 bg-white shadow-lg rounded-r-2xl p-4 min-w-[180px] max-w-[260px]
           flex-col gap-2 transition-transform duration-300
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           sm:static sm:translate-x-0 sm:flex sm:mt-8 sm:ml-4 sm:h-fit

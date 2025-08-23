@@ -12,6 +12,8 @@ import { REQUIRED_TOKEN_VERSION } from "../constants/globle";
 import { decryptMasterKey, encryptMasterKey } from "../utils/cryptoUtils";
 import CryptoJS from "crypto-js";
 import Modal from "../components/reusable/Modal";
+import { Button } from "../components/reusable/Button";
+import WhatsNew from "../components/WhatsNew";
 
 export default function RegisterPage({ setUserName }) {
   const [registerForm, setRegisterForm] = useState({
@@ -137,20 +139,16 @@ export default function RegisterPage({ setUserName }) {
           process will re-encrypt your data with your new master key.
         </p>
         <div className="flex justify-center gap-4 mt-4">
-          <button
-            className="button-custom px-6 py-2"
-            onClick={handleMigrateData}
-            disabled={migrationLoading}
-          >
+          <Button onClick={handleMigrateData} disabled={migrationLoading}>
             {migrationLoading ? "Migrating..." : "Migrate Now"}
-          </button>
-          <button
-            className="button-custom bg-gray-200 text-gray-700 px-6 py-2"
+          </Button>
+          <Button
             onClick={() => setShowMigrationModal(false)}
             disabled={migrationLoading}
+            variant="outline"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </Modal>
       <Modal
@@ -163,8 +161,7 @@ export default function RegisterPage({ setUserName }) {
           master key now?
         </p>
         <div className="flex justify-center gap-4 mt-4">
-          <button
-            className="button-custom px-6 py-2"
+          <Button
             onClick={async () => {
               setLoading(true);
               try {
@@ -197,92 +194,29 @@ export default function RegisterPage({ setUserName }) {
             }}
           >
             Yes, Upgrade
-          </button>
-          <button
-            className="button-custom bg-gray-200 text-gray-700 px-6 py-2"
+          </Button>
+          <Button
             onClick={() => {
               setShowUpgradeModal(false);
               alert("You need to upgrade your account to continue.");
             }}
+            variant="outline"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </Modal>
       <div className="flex flex-1 items-center justify-center ">
         <LoadingPopup show={loading} />
         {/* Help Modal */}
-        {showHelp && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto">
-            <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full text-left text-black mt-8 relative max-h-[90vh] overflow-y-auto">
-              <button
-                className="absolute top-2 right-2 text-gray-500 hover:text-black"
-                onClick={() => setShowHelp(false)}
-                aria-label="Close"
-              >
-                ×
-              </button>
+        <Modal
+          show={showHelp}
+          onClose={() => setShowHelp(false)}
+          title="How to Use Your Dashboard"
+        >
+          <WhatsNew />
+        </Modal>
 
-              <h2 className="text-xl font-bold mb-2">
-                How to Use Your Dashboard
-              </h2>
-
-              {/* What's New Section */}
-              <div className="mb-4 p-3 rounded bg-indigo-50 border border-indigo-200">
-                <h3 className="font-semibold text-indigo-700 mb-1">
-                  🚀 What's New
-                </h3>
-                <ul className="list-disc ml-5 text-indigo-800 text-base space-y-1">
-                  <li>
-                    <b>Personal Expenses:</b> You can now get notification for
-                    fill the personal expenses.
-                  </li>
-                  <li>
-                    <b>End-to-End Encryption:</b> Personal expenses are securely
-                    encrypted so only you can view them.
-                  </li>
-                  <li>
-                    <b>Edit & Delete:</b> You can now easily edit or remove your
-                    personal expenses from the list.
-                  </li>
-                  <li>
-                    <b>UI Improvement:</b> Enhanced visual layout for the
-                    transaction and expense lists.
-                  </li>
-                  <li>
-                    <b>Sorting:</b> Both transactions and expenses are now
-                    sorted in descending order of date.
-                  </li>
-                </ul>
-              </div>
-
-              <ul className="list-disc ml-5 space-y-2 text-base">
-                <li>
-                  <b>Welcome Screen:</b> When you log in, you'll see a welcome
-                  message. Use the sidebar to select a feature and get started.
-                </li>
-                <li>
-                  <b>Lend & Borrow:</b> Add people, record money you lend,
-                  borrow, receive, or repay. View summaries and all
-                  transactions.
-                </li>
-                <li>
-                  <b>Personal Expenses:</b> Track your own expenses by category,
-                  see monthly lists and summaries.
-                </li>
-                <li>
-                  <b>Export as PDF:</b> You can export both transactions and
-                  personal expenses as PDF files, including summaries and
-                  applied filters.
-                </li>
-                <li>Use the sidebar to switch between features and tabs.</li>
-                <li>
-                  All your data is securely saved and only visible to you.
-                </li>
-              </ul>
-            </div>
-          </div>
-        )}
         <form
           onSubmit={handleSubmit}
           className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm"
@@ -359,9 +293,9 @@ export default function RegisterPage({ setUserName }) {
               </div>
             </>
           )}
-          <button type="submit" className="button-custom w-full">
+          <Button type="submit" className=" w-full">
             {activeTab === "Sign Up" ? "Register" : "Login"}
-          </button>
+          </Button>
         </form>
       </div>
     </>
