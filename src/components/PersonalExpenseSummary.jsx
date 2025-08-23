@@ -4,7 +4,7 @@ function PersonalExpenseSummary({ expenses, total, byCategory }) {
   if (!expenses || expenses.length === 0) return null;
 
   return (
-    <div className="bg-indigo-50 p-4 rounded shadow text-indigo-900 mb-4">
+    <div className="bg-indigo-50 p-2 rounded shadow text-indigo-900 ">
       <h3 className="text-lg font-semibold mb-2">Summary</h3>
       <div className="mb-2">
         <span className="font-bold">Total:</span> ₹{total}
