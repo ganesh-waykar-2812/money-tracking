@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { REQUIRED_TOKEN_VERSION } from "./constants/globle";
 import { deleteSubscription } from "./services/api";
+import "@fontsource/roboto";
 
 const TABS = [
   {
@@ -80,7 +81,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="flex flex-col min-h-screen bg-gray-100">
+      <div className="flex flex-col h-screen w-screen bg-gray-100 overflow-hidden">
         <Header
           userName={userName}
           onLogout={handleLogout}
@@ -92,7 +93,7 @@ function App() {
           expandedSection={expandedSection}
           setExpandedSection={setExpandedSection}
         />
-        <div className="flex-1 flex">
+        <div className="flex-1 flex overflow-hidden">
           <Routes>
             <Route
               path="/"
@@ -114,6 +115,9 @@ function App() {
             />
           </Routes>
         </div>
+        <footer className="text-center text-gray-400 text-sm m-1">
+          Money Tracker &copy; 2025 Ganesh Waykar
+        </footer>
       </div>
     </BrowserRouter>
   );

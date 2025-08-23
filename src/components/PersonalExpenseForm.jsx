@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import TextInput from "./reusable/TextInput";
 import Dropdown from "./reusable/Dropdown";
+import { Button } from "./reusable/Button";
 
 const categories = [
   "Food",
@@ -55,7 +56,7 @@ export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
 
   return (
     <>
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+      <h2 className="text-xl sm:text-xl font-semibold mb-4 text-gray-800 tracking-tight">
         {isAdd ? "Add New Expense" : "Edit Expense"}
       </h2>
       <form
@@ -64,7 +65,7 @@ export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
           handleSubmit(form, isAdd);
           setForm({ amount: "", category: "", date: "", note: "" });
         }}
-        className="mb-4 bg-white  rounded shadow text-black"
+        className="mb-4   text-black"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <TextInput
@@ -75,13 +76,21 @@ export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
           />
 
           <Dropdown
-            onChangeHandler={(value) =>
-              setForm({ ...form, category: value.value })
+            onChangeHandler={(selected) =>
+              setForm((prev) => ({ ...prev, category: selected._id }))
             }
-            options={categories.map((c) => ({ _id: c, name: c }))}
+            options={categories.map((c) => ({
+              _id: c,
+              name: c,
+            }))}
             placeholder="Select Category"
-            value={{ _id: form.category, name: form.category }}
+            value={
+              form.category
+                ? { _id: form.category, name: form.category }
+                : { _id: "", name: "" }
+            }
           />
+
           <TextInput
             value={form.date}
             onChangeHandler={(v) => setForm({ ...form, date: v })}
@@ -96,9 +105,10 @@ export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
             isRequired={false}
           />
         </div>
-        <button className="mt-4 w-full button-custom" disabled={!isValid}>
+
+        <Button disabled={!isValid} className="mt-4 w-full">
           {isAdd ? "Add Expense" : "Update Expense"}
-        </button>
+        </Button>
       </form>
     </>
   );

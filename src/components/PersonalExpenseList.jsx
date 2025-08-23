@@ -14,6 +14,8 @@ import LoadingPopup from "./reusable/LoadingPopup";
 import { encryptData, safeDecrypt } from "../utils/cryptoUtils";
 import Modal from "./reusable/Modal";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { Button } from "./reusable/Button";
+import MultiSelectDropdown from "./reusable/MultiSelectDropdown";
 
 export default function PersonalExpenseList() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -25,12 +27,21 @@ export default function PersonalExpenseList() {
   const [expenses, setExpenses] = useState([]);
   const [editData, setEditData] = useState(null);
   const [isAdd, setIsAdd] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}`;
+    const initialValue = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}`;
+    return {
+      _id: initialValue,
+      name: new Date(initialValue + "-01").toLocaleString("default", {
+        year: "numeric",
+        month: "long",
+      }),
+    };
   });
 
   useEffect(() => {
@@ -38,14 +49,28 @@ export default function PersonalExpenseList() {
   }, []);
 
   const filteredExpenses = useMemo(() => {
-    return selectedMonth === "all"
-      ? expenses
+    return selectedMonth._id === "all"
+      ? expenses.filter((exp) => {
+          if (
+            selectedCategories.length > 0 &&
+            !selectedCategories.includes(exp.category)
+          ) {
+            return false;
+          }
+          return true;
+        })
       : expenses.filter((exp) => {
+          if (
+            selectedCategories.length > 0 &&
+            !selectedCategories.includes(exp.category)
+          ) {
+            return false;
+          }
           if (!exp.date) return false;
           const [year, month] = exp.date.split("-");
-          return `${year}-${month}` === selectedMonth;
+          return `${year}-${month}` === selectedMonth._id;
         });
-  }, [expenses, selectedMonth]);
+  }, [expenses, selectedMonth, selectedCategories]);
   // Get unique months from expenses
   const allMonths = useMemo(
     () =>
@@ -56,6 +81,20 @@ export default function PersonalExpenseList() {
         .reverse(),
     [expenses]
   );
+
+  // Build options
+  const monthOptions = useMemo(() => {
+    return [
+      { _id: "all", name: "All" },
+      ...allMonths.map((month) => ({
+        _id: month,
+        name: new Date(month + "-01").toLocaleString("default", {
+          year: "numeric",
+          month: "long",
+        }),
+      })),
+    ];
+  }, [allMonths]);
 
   const total = useMemo(
     () => filteredExpenses.reduce((sum, e) => sum + Number(e.amount), 0),
@@ -69,6 +108,7 @@ export default function PersonalExpenseList() {
       }, {}),
     [filteredExpenses]
   );
+  console.log("byCategory", byCategory);
 
   const handleExportPDF = () => {
     const doc = new jsPDF({ orientation: "landscape" });
@@ -189,6 +229,19 @@ export default function PersonalExpenseList() {
       }
 
       setExpenses(decryptedExpenses);
+      const selectedCategoriesFromApi = Array.from(
+        new Set(decryptedExpenses.map((exp) => exp.category).filter(Boolean))
+      ) // unique strings
+        .sort();
+      // .map((cat) => ({ _id: cat, name: cat })); // convert to objects
+      setSelectedCategories(selectedCategoriesFromApi);
+      const allCategories = selectedCategoriesFromApi.map((cat) => ({
+        _id: cat,
+        name: cat,
+      }));
+
+      console.log("allCategories", allCategories, selectedCategoriesFromApi);
+      setCategories(allCategories);
     } catch (error) {
       alert(error?.response?.data?.message || "Failed to fetch expenses");
     }
@@ -263,7 +316,10 @@ export default function PersonalExpenseList() {
 
   return (
     <>
+      {/* Loader */}
       <LoadingPopup show={loading} />
+
+      {/* Delete Confirmation */}
       <Modal
         show={isDeleteConfirmationOpen}
         onClose={() => {
@@ -271,21 +327,20 @@ export default function PersonalExpenseList() {
           setDeleteExpenseId(null);
         }}
         title="Delete Expense"
-      >
-        <div>
-          <p>Are you sure you want to delete this expense?</p>
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              className="button-custom"
+        footer={
+          <>
+            <Button
+              variant="secondary"
               onClick={() => {
                 setIsDeleteConfirmationOpen(false);
                 setDeleteExpenseId(null);
               }}
             >
               Cancel
-            </button>
-            <button
-              className="button-custom bg-red-500 hover:bg-red-600 text-white"
+            </Button>
+            <Button
+              variant="danger"
+              disabled={loading}
               onClick={async () => {
                 setLoading(true);
                 try {
@@ -302,128 +357,136 @@ export default function PersonalExpenseList() {
                 setLoading(false);
               }}
             >
-              Delete
-            </button>
-          </div>
-        </div>
+              {loading ? "Deleting..." : "Delete"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-gray-700">
+          Are you sure you want to delete this expense?
+        </p>
       </Modal>
 
+      {/* Add/Edit Form */}
       <Modal show={isFormModalOpen} onClose={() => setIsFormModalOpen(false)}>
-        <>
-          <PersonalExpenseForm
-            isAdd={isAdd}
-            editData={editData}
-            handleSubmit={handleAddPersonalExpense}
-          />
-        </>
+        <PersonalExpenseForm
+          isAdd={isAdd}
+          editData={editData}
+          handleSubmit={handleAddPersonalExpense}
+        />
       </Modal>
 
-      <>
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-2">
-          <label
-            htmlFor="month"
-            className="font-semibold text-gray-700 mb-1 sm:mb-0"
-          >
-            Filter by Month:
-          </label>
-          <div className="relative ">
-            <Dropdown
-              onChangeHandler={(value) => setSelectedMonth(value.value)}
-              options={[
-                { _id: "all", name: "All" },
-                ...allMonths.map((month) => ({
-                  _id: month,
-                  name: new Date(month + "-01").toLocaleString("default", {
-                    year: "numeric",
-                    month: "long",
-                  }),
-                })),
-              ]}
-              placeholder="Select Month"
-              value={{
-                _id: selectedMonth,
-                name:
-                  selectedMonth === "all"
-                    ? "All"
-                    : new Date(selectedMonth + "-01").toLocaleString(
-                        "default",
-                        {
-                          year: "numeric",
-                          month: "long",
-                        }
-                      ),
-              }}
-            />
-          </div>
+      {/* Filter + Export */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sticky top-0 bg-white z-[1] p-2 sm:p-4 md:p-8 ">
+        <div className="flex gap-2">
+          <Dropdown
+            label="Filter by Month"
+            value={selectedMonth}
+            onChangeHandler={setSelectedMonth}
+            options={monthOptions}
+            placeholder="Select Month"
+          />
+
+          <MultiSelectDropdown
+            label="Filter by Category"
+            options={categories}
+            selectedValues={selectedCategories}
+            onChange={(v) => {
+              console.log("'v' is ", v);
+              setSelectedCategories(v);
+            }}
+            placeholder="Choose people"
+          />
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+
+        <div className="flex gap-2 ">
+          <Button onClick={handleExportPDF}>Export PDF</Button>
+          <Button
+            onClick={() => {
+              setIsFormModalOpen(true);
+              setEditData(null);
+              setIsAdd(true);
+            }}
+          >
+            + New Expense
+          </Button>
+        </div>
+      </div>
+
+      {/* Expense Summary */}
+      <div className="p-2 sm:p-4 md:p-8 flex flex-col ">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight">
           Expense Summary
         </h2>
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-8">
+          <PersonalExpenseSummary
+            expenses={filteredExpenses}
+            byCategory={byCategory}
+            total={total}
+          />
+        </div>
 
-        <button className="button-custom" onClick={handleExportPDF}>
-          Export PDF
-        </button>
-        <PersonalExpenseSummary
-          expenses={filteredExpenses}
-          byCategory={byCategory}
-          total={total}
-        />
-        <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-          Expenses List
-        </h2>
-        <button
-          className="button-custom"
-          onClick={() => {
-            setIsFormModalOpen(true);
-            setEditData(null);
-            setIsAdd(true);
-          }}
-        >
-          + Add New Expense
-        </button>
-        <div className="bg-white p-4 rounded shadow text-black mb-4">
-          <ul className="space-y-2">
-            {filteredExpenses.map((exp, idx) => (
-              <li
-                key={idx}
-                className="flex justify-between items-center border-b last:border-b-0 py-2"
-              >
-                <div className="flex flex-col wrap-anywhere">
-                  <div>
-                    <span className="font-medium">{exp.category}</span>
-                    <span className="ml-2 text-gray-600 text-sm">
-                      {exp.note && `(${exp.note})`}
+        {/* Expense List */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl text-gray-900 tracking-tight font-semibold">
+            Expenses List
+          </h2>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+          {filteredExpenses.length === 0 ? (
+            <p className="text-gray-500 text-center py-6">
+              No expenses found for this month.
+            </p>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {filteredExpenses.map((exp, idx) => (
+                <li
+                  key={idx}
+                  className="flex justify-between items-center py-3 hover:bg-gray-50 rounded-lg px-2 transition"
+                >
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-800">
+                        {exp.category}
+                      </span>
+                      {exp.note && (
+                        <span className="text-gray-500 text-sm flex wrap-anywhere">
+                          ({exp.note})
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      {new Date(exp.date).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-400">
-                    {new Date(exp.date).toLocaleDateString()}
+
+                  <div className="flex items-center gap-4">
+                    <span className="font-semibold text-indigo-600 whitespace-nowrap">
+                      INR {exp.amount}
+                    </span>
+
+                    <button
+                      onClick={() => handleEdit(exp)}
+                      className="text-blue-500 hover:text-blue-700 transition"
+                      title="Edit"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(exp)}
+                      className="text-red-500 hover:text-red-700 transition"
+                      title="Delete"
+                    >
+                      <FaTrash />
+                    </button>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span className="font-bold text-indigo-600 whitespace-nowrap">
-                    INR {exp.amount}
-                  </span>
-
-                  {/* Edit & Delete Icons */}
-                  <button
-                    onClick={() => handleEdit(exp)}
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(exp)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      </>
+      </div>
     </>
   );
 }

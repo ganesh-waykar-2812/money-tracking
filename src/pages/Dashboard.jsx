@@ -15,6 +15,8 @@ import {
   sendFeedback,
 } from "../services/api";
 import { VAPID_PUBLIC_KEY } from "../constants/globle";
+import { Button } from "../components/reusable/Button";
+import WhatsNew from "../components/WhatsNew";
 
 export default function Dashboard({
   activeTab,
@@ -216,34 +218,33 @@ export default function Dashboard({
             Do you want to enable notifications?
           </p>
           <div className="mt-4 flex justify-end gap-2">
-            <button
-              className="button-custom"
+            <Button
               onClick={() => {
                 setIsNotificationConfirmationOpen(false);
               }}
+              variant="outline"
             >
               Cancel
-            </button>
-            <button
-              className="button-custom"
+            </Button>
+            <Button
               onClick={async () => {
                 const response = await enableNotification();
                 if (response) {
                   alert("Notifications enabled successfully!");
                 }
-                console.log("Notifications enabled:", response);
+
                 setIsNotificationConfirmationOpen(false);
               }}
             >
               Yes
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
-      <div className=" w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex font-sans relative">
+      <div className="flex-1 overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex font-sans relative">
         <aside
           className={`
-          fixed top-16 hidden left-0 h-[calc(100vh-4rem)] z-20 bg-white/90 shadow-lg rounded-r-2xl p-4 min-w-[180px] max-w-[260px]
+          fixed top-16 hidden left-0 h-[calc(100vh-4rem)] z-20 bg-white shadow-lg rounded-r-2xl p-4 min-w-[180px] max-w-[260px]
           flex-col gap-2 transition-transform duration-300 sm:static sm:translate-x-0 sm:flex sm:mt-8 sm:ml-4 sm:h-fit 
         `}
         >
@@ -300,12 +301,12 @@ export default function Dashboard({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col items-center py-4 sm:py-8 w-full ml-0 sm:ml-0">
-          <div className=" bg-white/90 rounded-2xl shadow-xl p-2 sm:p-4 md:p-8 flex flex-col min-w-[300px] w-full">
-            <div className="flex-1 min-w-0">
+        <main className="flex-1 flex flex-col   overflow-auto ">
+          <div className=" bg-white/90    flex-1 relative">
+            <div className="flex-1 flex flex-col  p-2 sm:p-4 md:p-8">
               {!activeTab && expandedSection !== "personalExpenses" && (
-                <div className="text-center py-16">
-                  <h1 className="text-3xl font-bold mb-4 text-indigo-700">
+                <div className="">
+                  <h1 className="text-2xl font-semibold mb-4 text-indigo-700">
                     Welcome to your Dashboard!
                   </h1>
                   <p className="text-lg text-gray-700 mb-2">
@@ -314,34 +315,8 @@ export default function Dashboard({
                   </p>
                   <p className="text-md text-gray-500">
                     Click a section on the left to get started.
-                  </p>{" "}
-                  <div className="mb-4 p-3 rounded bg-indigo-50 border border-indigo-200">
-                    <h3 className="font-semibold text-indigo-700 mb-1">
-                      🚀 What's New
-                    </h3>
-                    <ul className="list-disc ml-5 text-indigo-800 text-base space-y-1">
-                      <li>
-                        <b>Personal Expenses:</b> You can now get notification
-                        for fill the personal expenses.
-                      </li>
-                      <li>
-                        <b>End-to-End Encryption:</b> Personal expenses are
-                        securely encrypted so only you can view them.
-                      </li>
-                      <li>
-                        <b>Edit & Delete:</b> You can now easily edit or remove
-                        your personal expenses from the list.
-                      </li>
-                      <li>
-                        <b>UI Improvement:</b> Enhanced visual layout for the
-                        transaction and expense lists.
-                      </li>
-                      <li>
-                        <b>Sorting:</b> Both transactions and expenses are now
-                        sorted in descending order of date.
-                      </li>
-                    </ul>
-                  </div>
+                  </p>
+                  <WhatsNew />
                 </div>
               )}
               {activeTab === "addPerson" && (
@@ -357,13 +332,9 @@ export default function Dashboard({
                         placeholder="Name"
                         inputType="text"
                       />
-                      <button
-                        onClick={handleAddPerson}
-                        className="button-custom"
-                        disabled={!personName}
-                      >
+                      <Button onClick={handleAddPerson} disabled={!personName}>
                         Add Person
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </>
@@ -427,9 +398,6 @@ export default function Dashboard({
 
             <LoadingPopup show={loading} />
           </div>
-          <footer className="text-center text-gray-400 text-sm mt-8 mb-2">
-            Money Tracker &copy; 2025 Ganesh Waykar
-          </footer>
         </main>
       </div>
     </>

@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import React from "react";
 import Summary from "./Summary";
+import { Button } from "./reusable/Button";
 
 const typeDetails = {
   lend: {
@@ -132,9 +133,7 @@ const TransactionList = ({ transactions, summary }) => {
       <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
         Summary
       </h2>
-      <button className="button-custom" onClick={handleExportPDF}>
-        Export PDF
-      </button>
+      <Button onClick={handleExportPDF}>Export PDF</Button>
       <Summary summary={summary} />
       <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
         Transactions List
