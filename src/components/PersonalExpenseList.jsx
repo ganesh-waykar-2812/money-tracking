@@ -147,7 +147,7 @@ export default function PersonalExpenseList() {
       body: [
         [
           { content: "Total", styles: { fontStyle: "bold" } },
-          { content: `INR${total}`, styles: { fontStyle: "bold" } },
+          { content: `Rs${total}`, styles: { fontStyle: "bold" } },
         ],
       ],
       startY: 34,
@@ -161,7 +161,7 @@ export default function PersonalExpenseList() {
     // By Category table
     const categoryRows = Object.entries(byCategory).map(([cat, amt]) => [
       cat,
-      `INR${amt}`,
+      `Rs${amt}`,
     ]);
     if (categoryRows.length > 0) {
       autoTable(doc, {
@@ -178,7 +178,7 @@ export default function PersonalExpenseList() {
     // Prepare table columns and rows for expenses list
     const columns = [
       { header: "Category", dataKey: "category" },
-      { header: "Amount (INR)", dataKey: "amount" },
+      { header: "Amount (Rs)", dataKey: "amount" },
       { header: "Date", dataKey: "date" },
       { header: "Note", dataKey: "note" },
     ];
@@ -464,7 +464,7 @@ export default function PersonalExpenseList() {
 
                   <div className="flex items-center gap-1 flex-col">
                     <span className="font-semibold text-indigo-600 whitespace-nowrap">
-                      INR {exp.amount}
+                      Rs {exp.amount}
                     </span>
                     <div className="flex items-center gap-3">
                       <button

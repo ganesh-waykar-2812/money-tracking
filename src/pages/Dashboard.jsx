@@ -1,22 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import AddTransactionForm from "../components/AddTransactionForm";
+import { useEffect, useState } from "react";
 import PersonalExpenseList from "../components/PersonalExpenseList";
-import LoadingPopup from "../components/reusable/LoadingPopup";
-import Modal from "../components/reusable/Modal";
-import TextInput from "../components/reusable/TextInput";
-import TransactionList from "../components/TransactionList";
-import {
-  addPerson,
-  addTransaction,
-  getPeople,
-  getTransactions,
-  saveSubscription,
-  sendFeedback,
-} from "../services/api";
-import { VAPID_PUBLIC_KEY } from "../constants/globle";
 import { Button } from "../components/reusable/Button";
+import Modal from "../components/reusable/Modal";
+import TransactionList from "../components/TransactionList";
 import WhatsNew from "../components/WhatsNew";
+import { VAPID_PUBLIC_KEY } from "../constants/globle";
+import { saveSubscription, sendFeedback } from "../services/api";
 
 export default function Dashboard({
   activeTab,
@@ -25,70 +14,6 @@ export default function Dashboard({
   expandedSection,
   setExpandedSection,
 }) {
-  const [people, setPeople] = useState([]);
-  const [transactions, setTransactions] = useState([]);
-  const [personName, setPersonName] = useState("");
-  const [form, setForm] = useState({
-    personId: "",
-    amount: "",
-    type: "",
-    note: "",
-  });
-  const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!localStorage.getItem("token")) {
-      navigate("/register");
-    }
-    loadData();
-    // eslint-disable-next-line
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const peopleRes = await getPeople();
-      setPeople(peopleRes.data);
-      const txnRes = await getTransactions();
-      setTransactions(txnRes.data);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddPerson = async () => {
-    setLoading(true);
-    try {
-      await addPerson({ name: personName });
-      alert("Person added successfully");
-    } catch (error) {
-      alert(error?.response?.data?.message);
-    }
-    setPersonName("");
-    await loadData();
-    setLoading(false);
-  };
-
-  const handleAddTxn = async (form) => {
-    setLoading(true);
-    try {
-      await addTransaction(form);
-      alert("Transaction added successfully");
-      setForm({
-        personId: "",
-        amount: "",
-        type: "",
-        note: "",
-      });
-    } catch (error) {
-      alert(error?.response?.data?.message);
-    }
-    await loadData();
-    setLoading(false);
-  };
-
   const [feedback, setFeedback] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
 
@@ -107,29 +32,6 @@ export default function Dashboard({
     }
     setFeedbackLoading(false);
   };
-  const summary = useMemo(() => {
-    const summaryByPerson = {};
-
-    transactions.forEach((txn) => {
-      const { personId } = txn;
-      const { name } = personId;
-
-      if (!summaryByPerson[name]) {
-        summaryByPerson[name] = { lend: 0, borrowed: 0, received: 0, repay: 0 };
-      }
-
-      if (txn.type === "lend") {
-        summaryByPerson[name].lend += txn.amount;
-      } else if (txn.type === "borrowed") {
-        summaryByPerson[name].borrowed += txn.amount;
-      } else if (txn.type === "received") {
-        summaryByPerson[name].received += txn.amount;
-      } else if (txn.type === "repay") {
-        summaryByPerson[name].repay += txn.amount;
-      }
-    });
-    return summaryByPerson;
-  }, [transactions]);
 
   function urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -214,8 +116,8 @@ export default function Dashboard({
       >
         <div>
           <p>
-            We'd like to send you daily reminders at 9 PM to fill your expenses.
-            Do you want to enable notifications?
+            We&apos;d like to send you daily reminders at 9 PM to fill your
+            expenses. Do you want to enable notifications?
           </p>
           <div className="mt-4 flex justify-end gap-2">
             <Button
@@ -304,62 +206,26 @@ export default function Dashboard({
         <main className="flex-1 flex flex-col   overflow-auto ">
           <div className=" bg-white/90    flex-1 relative">
             <div className="flex-1 flex flex-col  p-2 sm:p-4 md:p-8">
-              {!activeTab && expandedSection !== "personalExpenses" && (
+              {expandedSection === "dashboard" && (
                 <div className="">
                   <h1 className="text-2xl font-semibold mb-4 text-indigo-700">
                     Welcome to your Dashboard!
                   </h1>
                   <p className="text-lg text-gray-700 mb-2">
-                    Use the sidebar to navigate between Lend & Borrow, Personal
-                    Expenses, and Feedback.
+                    The Lend & Borrow and Personal Expenses sections now offer a
+                    unified, modern experience. Add, filter, and export your
+                    data with ease.
                   </p>
                   <p className="text-md text-gray-500">
-                    Click a section on the left to get started.
+                    Use the sidebar to switch between features and get started.
                   </p>
                   <WhatsNew />
                 </div>
               )}
-              {activeTab === "addPerson" && (
-                <>
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-                    Add new person
-                  </h2>
-                  <div className="mb-8 bg-white p-4 rounded-xl shadow text-black">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <TextInput
-                        value={personName}
-                        onChangeHandler={setPersonName}
-                        placeholder="Name"
-                        inputType="text"
-                      />
-                      <Button onClick={handleAddPerson} disabled={!personName}>
-                        Add Person
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
 
-              {activeTab === "addTransaction" && (
+              {expandedSection === "transactions" && (
                 <>
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-                    Create Transaction
-                  </h2>
-                  <AddTransactionForm
-                    people={people}
-                    handleAddTxn={handleAddTxn}
-                    form={form}
-                    setForm={setForm}
-                  />
-                </>
-              )}
-
-              {activeTab === "transactions" && (
-                <>
-                  <TransactionList
-                    transactions={transactions}
-                    summary={summary}
-                  />
+                  <TransactionList />
                 </>
               )}
 
@@ -395,8 +261,6 @@ export default function Dashboard({
                 </>
               )}
             </div>
-
-            <LoadingPopup show={loading} />
           </div>
         </main>
       </div>

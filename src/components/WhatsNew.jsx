@@ -7,6 +7,19 @@ function WhatsNew() {
         <h3 className="font-semibold text-indigo-700 mb-1">🚀 What's New</h3>
         <ul className="list-disc ml-5 text-indigo-800 text-base space-y-1">
           <li>
+            <b>Transactions UI Revamp:</b> The Lend & Borrow section now matches
+            Personal Expenses in structure. Add people or transactions via
+            modals, filter and export with a unified, modern look.
+          </li>
+          <li>
+            <b>Consistent Summaries:</b> Status messages and icons for each
+            person are now consistent in both the UI and exported PDFs.
+          </li>
+          <li>
+            <b>Unified Font & Layout:</b> Font sizes and layouts are now
+            consistent across all lists and summaries.
+          </li>
+          <li>
             <b>Personal Expenses:</b> Get notified to fill in your personal
             expenses regularly.
           </li>

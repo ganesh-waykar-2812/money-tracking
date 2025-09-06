@@ -37,7 +37,8 @@ export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
   }
   useEffect(() => {
     if (isAdd) {
-      setForm({ amount: "", category: "", date: "", note: "" });
+      const today = new Date().toISOString().split("T")[0];
+      setForm({ amount: "", category: "", date: today, note: "" });
     } else if (editData) {
       setForm({
         amount: editData.amount || "",
