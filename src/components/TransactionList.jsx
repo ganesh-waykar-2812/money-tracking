@@ -1,12 +1,24 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Summary from "./Summary";
 import { Button } from "./reusable/Button";
+import Dropdown from "./reusable/Dropdown";
+import Modal from "./reusable/Modal";
+import TextInput from "./reusable/TextInput";
+import AddTransactionForm from "./AddTransactionForm";
+import {
+  addPerson,
+  addTransaction,
+  getPeople,
+  getTransactions,
+} from "../services/api";
+import LoadingPopup from "./reusable/LoadingPopup";
+import { getPersonSummaryStatus } from "../utils/transactionSummaryUtils";
 
 const typeDetails = {
   lend: {
-    label: (txn) => `You lent ₹${txn.amount} to ${txn.personId.name}`,
+    label: (txn) => `You lent Rs ${txn.amount} to ${txn.personId.name}`,
     color: "bg-blue-100 text-blue-800",
     icon: (
       <span role="img" aria-label="Lend">
@@ -15,7 +27,7 @@ const typeDetails = {
     ),
   },
   borrowed: {
-    label: (txn) => `You borrowed ₹${txn.amount} from ${txn.personId.name}`,
+    label: (txn) => `You borrowed Rs ${txn.amount} from ${txn.personId.name}`,
     color: "bg-yellow-100 text-yellow-800",
     icon: (
       <span role="img" aria-label="Borrowed">
@@ -24,7 +36,7 @@ const typeDetails = {
     ),
   },
   received: {
-    label: (txn) => `You received ₹${txn.amount} from ${txn.personId.name}`,
+    label: (txn) => `You received Rs ${txn.amount} from ${txn.personId.name}`,
     color: "bg-green-100 text-green-800",
     icon: (
       <span role="img" aria-label="Received">
@@ -33,7 +45,7 @@ const typeDetails = {
     ),
   },
   repay: {
-    label: (txn) => `You repaid ₹${txn.amount} to ${txn.personId.name}`,
+    label: (txn) => `You repaid Rs ${txn.amount} to ${txn.personId.name}`,
     color: "bg-red-100 text-red-800",
     icon: (
       <span role="img" aria-label="Repay">
@@ -43,10 +55,53 @@ const typeDetails = {
   },
 };
 
-const TransactionList = ({ transactions, summary }) => {
+const TransactionList = () => {
+  // Local state for modals
+  const [isTxnModalOpen, setIsTxnModalOpen] = useState(false);
+  const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
+  const [personName, setPersonName] = useState("");
+  const [form, setForm] = useState({
+    personId: "",
+    amount: "",
+    type: "",
+    note: "",
+    date: new Date().toISOString().split("T")[0],
+  });
+  const [loading, setLoading] = useState(false);
+  const [people, setPeople] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [filterPerson, setFilterPerson] = useState({ _id: "", name: "" });
+  const [filterType, setFilterType] = useState({ _id: "", name: "" });
+
+  const filteredTxns = useMemo(() => {
+    return transactions.filter((txn) => {
+      // Filter by person if a specific person is selected
+      if (
+        filterPerson &&
+        filterPerson._id &&
+        txn.personId._id !== filterPerson._id &&
+        filterPerson._id !== "all"
+      ) {
+        return false;
+      }
+
+      // Filter by type if a specific type is selected
+      if (
+        filterType &&
+        filterType._id &&
+        txn.type !== filterType._id &&
+        filterType._id !== "all"
+      ) {
+        return false;
+      }
+
+      // Include the transaction if it passes all filters
+      return true;
+    });
+  }, [transactions, filterPerson, filterType]);
+
   // Export to PDF handler (table format)
   const handleExportPDF = () => {
-    // Landscape orientation
     const doc = new jsPDF({ orientation: "landscape" });
 
     doc.setFontSize(16);
@@ -63,22 +118,50 @@ const TransactionList = ({ transactions, summary }) => {
       10
     );
 
-    // Render summary as a table
-    if (summary && Object.keys(summary).length > 0) {
+    // Render filtered summary as a table
+    if (filteredSummary && Object.keys(filteredSummary).length > 0) {
+      // Then add a "Status" column to your summaryColumns if desired
       const summaryColumns = [
         { header: "Person", dataKey: "person" },
-        { header: "Lend (INR)", dataKey: "lend" },
-        { header: "Received (INR)", dataKey: "received" },
-        { header: "Borrowed (INR)", dataKey: "borrowed" },
-        { header: "Repaid (INR)", dataKey: "repaid" },
+        { header: "Lend (Rs)", dataKey: "lend" },
+        { header: "Received (Rs)", dataKey: "received" },
+        { header: "Borrowed (Rs)", dataKey: "borrowed" },
+        { header: "Repaid (Rs)", dataKey: "repaid" },
+        { header: "Outstanding", dataKey: "outstanding" },
+        { header: "Status", dataKey: "status" },
       ];
-      const summaryRows = Object.entries(summary).map(([person, data]) => ({
-        person,
-        lend: data.lend,
-        received: data.received,
-        borrowed: data.borrowed,
-        repaid: data.repay,
-      }));
+      const summaryRows = Object.entries(filteredSummary).map(
+        ([person, data]) => {
+          const { message } = getPersonSummaryStatus(person, data);
+          const outstanding =
+            data.lend - data.received - data.borrowed + data.repay;
+          return {
+            person,
+            lend: data.lend,
+            received: data.received,
+            borrowed: data.borrowed,
+            repaid: data.repay,
+            outstanding,
+            status: message,
+          };
+        }
+      );
+
+      // Add a total row
+      summaryRows.push({
+        person: "Total Outstanding",
+        lend: "",
+        received: "",
+        borrowed: "",
+        repaid: "",
+        outstanding: totalOutstanding,
+        status:
+          totalOutstanding > 0
+            ? `You should get back Rs ${totalOutstanding}`
+            : totalOutstanding < 0
+            ? `You should pay Rs ${-totalOutstanding}`
+            : "All settled!",
+      });
 
       autoTable(doc, {
         columns: summaryColumns,
@@ -90,15 +173,15 @@ const TransactionList = ({ transactions, summary }) => {
       });
     }
 
-    // Prepare transaction table columns and rows
+    // Prepare filtered transaction table columns and rows
     const columns = [
       { header: "Type", dataKey: "type" },
-      { header: "Amount (INR)", dataKey: "amount" },
+      { header: "Amount (Rs)", dataKey: "amount" },
       { header: "Person", dataKey: "person" },
       { header: "Date", dataKey: "date" },
       { header: "Note", dataKey: "note" },
     ];
-    const rows = transactions.map((txn) => ({
+    const rows = filteredTxns.map((txn) => ({
       type: txn.type.charAt(0).toUpperCase() + txn.type.slice(1),
       amount: txn.amount,
       person: txn.personId.name,
@@ -108,7 +191,6 @@ const TransactionList = ({ transactions, summary }) => {
 
     // Render transactions table after summary
     if (rows.length > 0) {
-      // Add heading above the transactions table
       const tableStartY = doc.lastAutoTable
         ? doc.lastAutoTable.finalY + 16
         : 40;
@@ -128,30 +210,221 @@ const TransactionList = ({ transactions, summary }) => {
     doc.save("transactions.pdf");
   };
 
+  const filteredSummary = useMemo(() => {
+    // If a person is selected, show summary for all their transactions
+    if (filterPerson && filterPerson._id && filterPerson._id !== "all") {
+      const summaryObj = {};
+      transactions
+        .filter((txn) => txn.personId._id === filterPerson._id)
+        .forEach((txn) => {
+          const person = txn.personId.name;
+          if (!summaryObj[person]) {
+            summaryObj[person] = {
+              lend: 0,
+              received: 0,
+              borrowed: 0,
+              repay: 0,
+            };
+          }
+          if (txn.type === "lend")
+            summaryObj[person].lend += Number(txn.amount);
+          if (txn.type === "received")
+            summaryObj[person].received += Number(txn.amount);
+          if (txn.type === "borrowed")
+            summaryObj[person].borrowed += Number(txn.amount);
+          if (txn.type === "repay")
+            summaryObj[person].repay += Number(txn.amount);
+        });
+      return summaryObj;
+    }
+    // Otherwise, show summary for all filtered transactions
+    const summaryObj = {};
+    filteredTxns.forEach((txn) => {
+      const person = txn.personId.name;
+      if (!summaryObj[person]) {
+        summaryObj[person] = { lend: 0, received: 0, borrowed: 0, repay: 0 };
+      }
+      if (txn.type === "lend") summaryObj[person].lend += Number(txn.amount);
+      if (txn.type === "received")
+        summaryObj[person].received += Number(txn.amount);
+      if (txn.type === "borrowed")
+        summaryObj[person].borrowed += Number(txn.amount);
+      if (txn.type === "repay") summaryObj[person].repay += Number(txn.amount);
+    });
+    return summaryObj;
+  }, [transactions, filteredTxns, filterPerson]);
+
+  const onAddPerson = async (personName) => {
+    setLoading(true);
+    try {
+      await addPerson({ name: personName });
+      alert("Person added successfully");
+    } catch (error) {
+      alert(error?.response?.data?.message);
+    }
+
+    await loadData();
+    setLoading(false);
+  };
+
+  const onAddTransaction = async (form) => {
+    setLoading(true);
+    try {
+      await addTransaction(form);
+      alert("Transaction added successfully");
+      setForm({
+        personId: "",
+        amount: "",
+        type: "",
+        note: "",
+        date: new Date().toISOString().split("T")[0],
+      });
+    } catch (error) {
+      alert(error?.response?.data?.message);
+    }
+    await loadData();
+    setLoading(false);
+  };
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const peopleRes = await getPeople();
+      setPeople(peopleRes.data);
+      const txnRes = await getTransactions();
+      setTransactions(txnRes.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const totalOutstanding = useMemo(
+    () =>
+      Object.values(filteredSummary).reduce(
+        (sum, data) =>
+          sum + (data.lend - data.received - data.borrowed + data.repay),
+        0
+      ),
+    [filteredSummary]
+  );
   return (
     <>
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-        Summary
+      {/* Add Person Modal */}
+      <Modal
+        show={isPersonModalOpen}
+        onClose={() => setIsPersonModalOpen(false)}
+        title="Add New Person"
+      >
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+
+            await onAddPerson(personName);
+            setPersonName("");
+            setIsPersonModalOpen(false);
+          }}
+        >
+          <TextInput
+            value={personName}
+            onChangeHandler={setPersonName}
+            placeholder="Name"
+            inputType="text"
+          />
+          <Button
+            type="submit"
+            className="mt-4 w-full"
+            disabled={!personName || loading}
+          >
+            Add Person
+          </Button>
+        </form>
+      </Modal>
+
+      {/* Add Transaction Modal */}
+      <Modal
+        show={isTxnModalOpen}
+        onClose={() => setIsTxnModalOpen(false)}
+        title="Add Transaction"
+      >
+        <AddTransactionForm
+          people={people}
+          handleAddTxn={async (form) => {
+            await onAddTransaction(form);
+            setIsTxnModalOpen(false);
+          }}
+          form={form}
+          setForm={setForm}
+        />
+      </Modal>
+
+      {/* Filters and Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sticky top-0 bg-white z-[1] py-1">
+        <div className="flex gap-2">
+          <Dropdown
+            label="Filter by Person"
+            value={filterPerson}
+            onChangeHandler={setFilterPerson}
+            options={[{ _id: "all", name: "All" }, ...people]}
+            placeholder="Select Person"
+          />
+          <Dropdown
+            label="Filter by Type"
+            value={filterType}
+            onChangeHandler={setFilterType}
+            options={[
+              { _id: "all", name: "All" },
+              { _id: "lend", name: "Lend" },
+              { _id: "borrowed", name: "Borrowed" },
+              { _id: "received", name: "Received" },
+              { _id: "repay", name: "Repay" },
+            ]}
+            placeholder="Select Type"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={handleExportPDF}>Export PDF</Button>
+          <Button onClick={() => setIsTxnModalOpen(true)}>
+            + New Transaction
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setIsPersonModalOpen(true)}
+          >
+            + Add Person
+          </Button>
+        </div>
+      </div>
+
+      {/* Summary */}
+
+      <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight">
+        Lend & Borrow Summary
       </h2>
-      <Button onClick={handleExportPDF}>Export PDF</Button>
-      <Summary summary={summary} />
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+      <Summary summary={filteredSummary} totalOutstanding={totalOutstanding} />
+
+      {/* Transaction List */}
+
+      <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight">
         Transactions List
       </h2>
-      <div className="bg-white p-4 rounded shadow text-black">
-        <ul className="space-y-3">
-          {transactions.map((txn) => {
+      <div className="bg-white  rounded shadow text-black">
+        <ul className="space-y-1">
+          {filteredTxns.map((txn) => {
             const details = typeDetails[txn.type] || {};
             return (
               <li
                 key={txn._id}
-                className={`flex items-center gap-3 p-3 rounded ${
+                className={`flex items-center gap-3 p-2 rounded ${
                   details.color || "bg-gray-100 text-gray-800"
                 }`}
               >
                 <span className="text-xl">{details.icon}</span>
                 <div className="flex-1 text-left">
-                  <div className="font-medium">
+                  <div className="font-medium flex items-center gap-2">
                     {details.label ? details.label(txn) : "Transaction"}
                   </div>
                   <div className="text-xs text-gray-600">
@@ -164,6 +437,7 @@ const TransactionList = ({ transactions, summary }) => {
           })}
         </ul>
       </div>
+      <LoadingPopup show={loading} />
     </>
   );
 };

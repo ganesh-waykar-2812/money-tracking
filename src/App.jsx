@@ -1,24 +1,20 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import RegisterPage from "./pages/RegisterPage";
-import Dashboard from "./pages/Dashboard";
+import "@fontsource/roboto";
 import { useEffect, useState } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { REQUIRED_TOKEN_VERSION } from "./constants/globle";
+import Dashboard from "./pages/Dashboard";
+import RegisterPage from "./pages/RegisterPage";
 import { deleteSubscription } from "./services/api";
-import "@fontsource/roboto";
 
 const TABS = [
   {
-    key: "money",
-    label: "Money Tracker",
-    icon: "💰",
-    children: [
-      { key: "addPerson", label: "Add Person", icon: "➕" },
-      { key: "addTransaction", label: "Create Transaction", icon: "💸" },
-      { key: "transactions", label: "Transactions List", icon: "📋" },
-    ],
+    key: "dashboard",
+    label: "Dashboard",
+    icon: "🏠",
   },
+  { key: "transactions", label: "Lend & Borrow", icon: "📋" },
   {
     key: "personalExpenses",
     label: "Personal Expenses",
@@ -77,7 +73,7 @@ function App() {
   // In App.jsx
   // Local state to track which section is expanded
 
-  const [expandedSection, setExpandedSection] = useState(null);
+  const [expandedSection, setExpandedSection] = useState("dashboard"); // Default to dashboard
 
   return (
     <BrowserRouter>

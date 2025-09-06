@@ -22,7 +22,7 @@ const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
     },
   ];
 
-  const isFormValid = form.personId && form.amount && form.type;
+  const isFormValid = form.personId && form.amount && form.type && form.date;
 
   return (
     <form
@@ -30,7 +30,7 @@ const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
         e.preventDefault();
         handleAddTxn(form);
       }}
-      className="mb-4 bg-white p-4 rounded shadow text-black"
+      className=" bg-white rounded  text-black"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Dropdown
@@ -63,7 +63,12 @@ const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
             name: form.type || "",
           }}
         />
-
+        <TextInput
+          value={form.date}
+          onChangeHandler={(v) => setForm({ ...form, date: v })}
+          placeholder="Date"
+          inputType="date"
+        />
         <TextInput
           value={form.note}
           onChangeHandler={(value) => setForm({ ...form, note: value })}
