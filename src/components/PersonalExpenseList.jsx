@@ -16,6 +16,7 @@ import Modal from "./reusable/Modal";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { Button } from "./reusable/Button";
 import MultiSelectDropdown from "./reusable/MultiSelectDropdown";
+import MessageModal from "./reusable/MessageModal";
 
 export default function PersonalExpenseList() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -29,6 +30,11 @@ export default function PersonalExpenseList() {
   const [isAdd, setIsAdd] = useState(true);
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [msgModal, setMsgModal] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
 
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -243,7 +249,11 @@ export default function PersonalExpenseList() {
       console.log("allCategories", allCategories, selectedCategoriesFromApi);
       setCategories(allCategories);
     } catch (error) {
-      alert(error?.response?.data?.message || "Failed to fetch expenses");
+      setMsgModal({
+        show: true,
+        type: "error",
+        message: error?.response?.data?.message || "Failed to fetch expenses",
+      });
     }
     setLoading(false);
   }
@@ -254,7 +264,11 @@ export default function PersonalExpenseList() {
       try {
         const masterKey = localStorage.getItem("masterKey");
         if (!masterKey) {
-          alert("Master key not found. Please re-login.");
+          setMsgModal({
+            show: true,
+            type: "error",
+            message: "Master key not found. Please re-login.",
+          });
           setLoading(false);
           return;
         }
@@ -268,16 +282,29 @@ export default function PersonalExpenseList() {
           amount: encryptedAmount,
           note: encryptedNote,
         });
-        alert("Expense added successfully");
+
+        setMsgModal({
+          show: true,
+          type: "success",
+          message: "Expense added successfully",
+        });
       } catch (error) {
-        alert(error?.response?.data?.message || "Failed to add expense");
+        setMsgModal({
+          show: true,
+          type: "error",
+          message: error?.response?.data?.message || "Failed to add expense",
+        });
       }
     } else {
       // handle edit api call
       try {
         const masterKey = localStorage.getItem("masterKey");
         if (!masterKey) {
-          alert("Master key not found. Please re-login.");
+          setMsgModal({
+            show: true,
+            type: "error",
+            message: "Master key not found. Please re-login.",
+          });
           setLoading(false);
           return;
         }
@@ -291,9 +318,17 @@ export default function PersonalExpenseList() {
           amount: encryptedAmount,
           note: encryptedNote,
         });
-        alert("Expense updated successfully");
+        setMsgModal({
+          show: true,
+          type: "success",
+          message: "Expense updated successfully",
+        });
       } catch (error) {
-        alert(error?.response?.data?.message || "Failed to update expense");
+        setMsgModal({
+          show: true,
+          type: "error",
+          message: error?.response?.data?.message || "Failed to update expense",
+        });
       }
     }
     setIsFormModalOpen(false);
@@ -318,6 +353,13 @@ export default function PersonalExpenseList() {
     <>
       {/* Loader */}
       <LoadingPopup show={loading} />
+
+      <MessageModal
+        show={msgModal.show}
+        message={msgModal.message}
+        type={msgModal.type}
+        onClose={() => setMsgModal({ ...msgModal, show: false })}
+      />
 
       {/* Delete Confirmation */}
       <Modal
@@ -345,12 +387,21 @@ export default function PersonalExpenseList() {
                 setLoading(true);
                 try {
                   await deletePersonalExpense(deleteExpenseId);
-                  alert("Expense deleted successfully");
+
+                  setMsgModal({
+                    show: true,
+                    type: "success",
+                    message: "Expense deleted successfully",
+                  });
                   await fetchExpenses();
                 } catch (error) {
-                  alert(
-                    error?.response?.data?.message || "Failed to delete expense"
-                  );
+                  setMsgModal({
+                    show: true,
+                    type: "error",
+                    message:
+                      error?.response?.data?.message ||
+                      "Failed to delete expense",
+                  });
                 }
                 setIsDeleteConfirmationOpen(false);
                 setDeleteExpenseId(null);

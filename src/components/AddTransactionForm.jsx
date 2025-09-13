@@ -2,7 +2,13 @@ import { Button } from "./reusable/Button";
 import Dropdown from "./reusable/Dropdown";
 import TextInput from "./reusable/TextInput";
 
-const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
+const AddTransactionForm = ({
+  people,
+  handleAddTxn,
+  form,
+  setForm,
+  isEdit,
+}) => {
   const transactionOptions = [
     {
       _id: "lend",
@@ -78,7 +84,7 @@ const AddTransactionForm = ({ people, handleAddTxn, form, setForm }) => {
         />
       </div>
       <Button className="mt-4 w-full" disabled={!isFormValid}>
-        Add Transaction
+        {isEdit ? "Update Transaction" : "Add Transaction"}
       </Button>
     </form>
   );

@@ -14,6 +14,7 @@ import CryptoJS from "crypto-js";
 import Modal from "../components/reusable/Modal";
 import { Button } from "../components/reusable/Button";
 import WhatsNew from "../components/WhatsNew";
+import MessageModal from "../components/reusable/MessageModal";
 
 export default function RegisterPage({ setUserName }) {
   const [registerForm, setRegisterForm] = useState({
@@ -34,6 +35,11 @@ export default function RegisterPage({ setUserName }) {
 
   const [showMigrationModal, setShowMigrationModal] = useState(false);
   const [migrationLoading, setMigrationLoading] = useState(false);
+  const [msgModal, setMsgModal] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,7 +81,12 @@ export default function RegisterPage({ setUserName }) {
           navigate("/");
         }
       } catch (error) {
-        alert(error?.response?.data?.message);
+        setMsgModal({
+          show: true,
+          type: "error",
+          message:
+            error?.response?.data?.message || "Login failed. Please try again.",
+        });
       }
       setLoading(false); // <-- Stop loading
       return;
@@ -90,10 +101,21 @@ export default function RegisterPage({ setUserName }) {
         encryptedMasterKey,
       };
       await register(payload);
-      alert("Registered. Now login.");
+
+      setMsgModal({
+        show: true,
+        type: "success",
+        message: "Registered successfully. Please log in.",
+      });
       setActiveTab("Login");
     } catch (error) {
-      alert(error?.response?.data?.message);
+      setMsgModal({
+        show: true,
+        type: "error",
+        message:
+          error?.response?.data?.message ||
+          "Registration failed. Please try again.",
+      });
     }
     setLoading(false); // <-- Stop loading
   };
@@ -117,18 +139,36 @@ export default function RegisterPage({ setUserName }) {
         password: loginForm.password,
         email: loginForm.email,
       }); // You need to implement this
-      alert("Migration successful! Please log in again.");
+
+      setMsgModal({
+        show: true,
+        type: "success",
+        message: "Migration successful! Please log in again.",
+      });
       setShowMigrationModal(false);
 
       // Reload or redirect as needed
     } catch (error) {
-      alert("Migration failed. Please try again.");
+      setMsgModal({
+        show: true,
+        type: "error",
+        message:
+          error?.response?.data?.message ||
+          "Migration failed. Please try again.",
+      });
     }
     setMigrationLoading(false);
   };
 
   return (
     <>
+      {" "}
+      <MessageModal
+        show={msgModal.show}
+        message={msgModal.message}
+        type={msgModal.type}
+        onClose={() => setMsgModal({ ...msgModal, show: false })}
+      />
       <Modal
         show={showMigrationModal}
         onClose={() => setShowMigrationModal(false)}
@@ -184,12 +224,15 @@ export default function RegisterPage({ setUserName }) {
                 setUserName(response?.data?.user.name);
                 navigate("/");
               } catch (error) {
-                console.log("error", error);
                 setLoading(false);
-                alert(
-                  error?.response?.data?.message ||
-                    "Upgrade failed. Please try again."
-                );
+
+                setMsgModal({
+                  show: true,
+                  type: "error",
+                  message:
+                    error?.response?.data?.message ||
+                    "Failed to upgrade. Please try again.",
+                });
               }
             }}
           >
@@ -198,7 +241,12 @@ export default function RegisterPage({ setUserName }) {
           <Button
             onClick={() => {
               setShowUpgradeModal(false);
-              alert("You need to upgrade your account to continue.");
+
+              setMsgModal({
+                show: true,
+                type: "error",
+                message: "You need to upgrade your account to continue.",
+              });
             }}
             variant="outline"
           >
