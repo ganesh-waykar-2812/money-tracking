@@ -10,11 +10,15 @@ import AddTransactionForm from "./AddTransactionForm";
 import {
   addPerson,
   addTransaction,
+  deleteTransaction,
   getPeople,
   getTransactions,
+  updateTransaction,
 } from "../services/api";
 import LoadingPopup from "./reusable/LoadingPopup";
 import { getPersonSummaryStatus } from "../utils/transactionSummaryUtils";
+import { FaEdit, FaTrash } from "react-icons/fa";
+import MessageModal from "./reusable/MessageModal";
 
 const typeDetails = {
   lend: {
@@ -58,6 +62,7 @@ const typeDetails = {
 const TransactionList = () => {
   // Local state for modals
   const [isTxnModalOpen, setIsTxnModalOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
   const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
   const [personName, setPersonName] = useState("");
   const [form, setForm] = useState({
@@ -72,6 +77,15 @@ const TransactionList = () => {
   const [transactions, setTransactions] = useState([]);
   const [filterPerson, setFilterPerson] = useState({ _id: "", name: "" });
   const [filterType, setFilterType] = useState({ _id: "", name: "" });
+  const [msgModal, setMsgModal] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
+
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
+    useState(false);
+  const [deleteTransactionId, setDeleteTransactionId] = useState(null);
 
   const filteredTxns = useMemo(() => {
     return transactions.filter((txn) => {
@@ -258,20 +272,68 @@ const TransactionList = () => {
     setLoading(true);
     try {
       await addPerson({ name: personName });
-      alert("Person added successfully");
+
+      setMsgModal({
+        show: true,
+        message: "Person added successfully",
+        type: "success",
+      });
     } catch (error) {
-      alert(error?.response?.data?.message);
+      setMsgModal({
+        show: true,
+        message: error?.response?.data?.message || "Failed to add Person",
+        type: "error",
+      });
     }
 
     await loadData();
     setLoading(false);
   };
 
-  const onAddTransaction = async (form) => {
+  const onAddEditTransaction = async (form) => {
+    const updatedDate = new Date(
+      `${form.date}T${new Date().toISOString().split("T")[1]}`
+    ).toISOString();
+
+    const payload = { ...form, date: updatedDate };
+
     setLoading(true);
+    if (isEdit) {
+      // Call update API
+      try {
+        await updateTransaction(form._id, payload);
+        setMsgModal({
+          show: true,
+          message: "Transaction updated successfully",
+          type: "success",
+        });
+        setForm({
+          personId: "",
+          amount: "",
+          type: "",
+          note: "",
+          date: new Date().toISOString().split("T")[0],
+        });
+        setIsEdit(false);
+      } catch (error) {
+        setMsgModal({
+          show: true,
+          message:
+            error?.response?.data?.message || "Failed to update Transaction",
+          type: "error",
+        });
+      }
+      await loadData();
+      setLoading(false);
+      return;
+    }
     try {
-      await addTransaction(form);
-      alert("Transaction added successfully");
+      await addTransaction(payload);
+      setMsgModal({
+        show: true,
+        message: "Transaction added successfully",
+        type: "success",
+      });
       setForm({
         personId: "",
         amount: "",
@@ -280,7 +342,11 @@ const TransactionList = () => {
         date: new Date().toISOString().split("T")[0],
       });
     } catch (error) {
-      alert(error?.response?.data?.message);
+      setMsgModal({
+        show: true,
+        message: error?.response?.data?.message || "Failed to add Transaction",
+        type: "error",
+      });
     }
     await loadData();
     setLoading(false);
@@ -311,8 +377,87 @@ const TransactionList = () => {
       ),
     [filteredSummary]
   );
+
+  const handleEdit = (txn) => {
+    setForm({
+      _id: txn._id,
+      personId: txn.personId._id,
+      amount: txn.amount,
+      type: txn.type,
+      note: txn.note || "",
+      date: new Date(txn.date).toISOString().split("T")[0],
+    });
+    setIsTxnModalOpen(true);
+    setIsEdit(true);
+  };
+
+  const handleDelete = async (txn) => {
+    setDeleteTransactionId(txn._id);
+    setIsDeleteConfirmationOpen(true);
+  };
   return (
     <>
+      <MessageModal
+        show={msgModal.show}
+        message={msgModal.message}
+        type={msgModal.type}
+        onClose={() => setMsgModal({ ...msgModal, show: false })}
+      />
+      <Modal
+        show={isDeleteConfirmationOpen}
+        onClose={() => {
+          setIsDeleteConfirmationOpen(false);
+          setDeleteTransactionId(null);
+        }}
+        title="Delete Expense"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsDeleteConfirmationOpen(false);
+                setDeleteTransactionId(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              disabled={loading}
+              onClick={async () => {
+                setLoading(true);
+                try {
+                  await deleteTransaction(deleteTransactionId);
+
+                  setMsgModal({
+                    show: true,
+                    message: "Transaction deleted successfully",
+                    type: "success",
+                  });
+                  await loadData();
+                } catch (error) {
+                  setMsgModal({
+                    show: true,
+                    message:
+                      error?.response?.data?.message ||
+                      "Failed to delete Transaction",
+                    type: "error",
+                  });
+                }
+                setIsDeleteConfirmationOpen(false);
+                setDeleteTransactionId(null);
+                setLoading(false);
+              }}
+            >
+              {loading ? "Deleting..." : "Delete"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-gray-700">
+          Are you sure you want to delete this Transaction?
+        </p>
+      </Modal>
       {/* Add Person Modal */}
       <Modal
         show={isPersonModalOpen}
@@ -343,24 +488,33 @@ const TransactionList = () => {
           </Button>
         </form>
       </Modal>
-
       {/* Add Transaction Modal */}
       <Modal
         show={isTxnModalOpen}
-        onClose={() => setIsTxnModalOpen(false)}
-        title="Add Transaction"
+        onClose={() => {
+          setIsTxnModalOpen(false);
+          setIsEdit(false);
+          setForm({
+            personId: "",
+            amount: "",
+            type: "",
+            note: "",
+            date: new Date().toISOString().split("T")[0],
+          });
+        }}
+        title={isEdit ? "Edit Transaction" : "Add New Transaction"}
       >
         <AddTransactionForm
           people={people}
           handleAddTxn={async (form) => {
-            await onAddTransaction(form);
+            await onAddEditTransaction(form);
             setIsTxnModalOpen(false);
           }}
           form={form}
           setForm={setForm}
+          isEdit={isEdit}
         />
       </Modal>
-
       {/* Filters and Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sticky top-0 bg-white z-[1] py-1">
         <div className="flex gap-2">
@@ -398,16 +552,12 @@ const TransactionList = () => {
           </Button>
         </div>
       </div>
-
       {/* Summary */}
-
       <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight">
         Lend & Borrow Summary
       </h2>
       <Summary summary={filteredSummary} totalOutstanding={totalOutstanding} />
-
       {/* Transaction List */}
-
       <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight">
         Transactions List
       </h2>
@@ -431,6 +581,22 @@ const TransactionList = () => {
                     {new Date(txn.date).toLocaleDateString()}
                     {txn.note ? ` • ${txn.note}` : ""}
                   </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleEdit(txn)}
+                    className="text-blue-500 hover:text-blue-700 transition"
+                    title="Edit"
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(txn)}
+                    className="text-red-500 hover:text-red-700 transition"
+                    title="Delete"
+                  >
+                    <FaTrash />
+                  </button>
                 </div>
               </li>
             );

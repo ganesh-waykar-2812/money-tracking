@@ -44,6 +44,9 @@ export const addPerson = (data) => API.post("/persons", data);
 
 export const getTransactions = () => API.get("/transactions");
 export const addTransaction = (data) => API.post("/transactions", data);
+export const deleteTransaction = (id) => API.delete(`/transactions/${id}`);
+export const updateTransaction = (id, data) =>
+  API.put(`/transactions/${id}`, data);
 
 // Personal Expenses API
 export const getPersonalExpenses = () => API.get("/personal-expenses");

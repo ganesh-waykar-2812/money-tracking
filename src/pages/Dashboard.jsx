@@ -6,6 +6,7 @@ import TransactionList from "../components/TransactionList";
 import WhatsNew from "../components/WhatsNew";
 import { VAPID_PUBLIC_KEY } from "../constants/globle";
 import { saveSubscription, sendFeedback } from "../services/api";
+import MessageModal from "../components/reusable/MessageModal";
 
 export default function Dashboard({
   activeTab,
@@ -16,19 +17,37 @@ export default function Dashboard({
 }) {
   const [feedback, setFeedback] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [msgModal, setMsgModal] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
 
   const handleSendFeedback = async () => {
     if (!feedback.trim()) {
-      alert("Please enter your feedback.");
+      setMsgModal({
+        show: true,
+        type: "error",
+        message: "Please enter your feedback.",
+      });
       return;
     }
     setFeedbackLoading(true);
     try {
       await sendFeedback({ message: feedback });
-      alert("Thank you for your feedback!");
+
+      setMsgModal({
+        show: true,
+        type: "success",
+        message: "Thank you for your feedback!",
+      });
       setFeedback("");
     } catch (error) {
-      alert(error?.response?.data?.message || "Failed to send feedback");
+      setMsgModal({
+        show: true,
+        type: "error",
+        message: error?.response?.data?.message || "Failed to send feedback",
+      });
     }
     setFeedbackLoading(false);
   };
@@ -57,7 +76,11 @@ export default function Dashboard({
 
   const checkNotificationStatus = () => {
     if (!("Notification" in window)) {
-      alert("This browser does not support desktop notification");
+      setMsgModal({
+        show: true,
+        type: "error",
+        message: "This browser does not support desktop notification",
+      });
       return;
     }
     return Notification.permission; // "granted", "denied", or "default"
@@ -71,14 +94,16 @@ export default function Dashboard({
       return;
     }
     if (currentStatus === "denied") {
-      alert(
-        "You have denied notifications. You can enable them in your browser settings."
-      );
+      setMsgModal({
+        show: true,
+        type: "error",
+        message:
+          "You have denied notifications. You can enable them in your browser settings.",
+      });
       return;
     }
-    console.log("Requesting notification permission...");
+
     const permission = await Notification.requestPermission();
-    console.log("Notification Permission:", permission);
 
     if (permission === "granted") {
       subscribeUser();
@@ -107,6 +132,12 @@ export default function Dashboard({
 
   return (
     <>
+      <MessageModal
+        show={msgModal.show}
+        message={msgModal.message}
+        type={msgModal.type}
+        onClose={() => setMsgModal({ ...msgModal, show: false })}
+      />
       <Modal
         show={isNotificationConfirmationOpen}
         onClose={() => {
@@ -132,7 +163,11 @@ export default function Dashboard({
               onClick={async () => {
                 const response = await enableNotification();
                 if (response) {
-                  alert("Notifications enabled successfully!");
+                  setMsgModal({
+                    show: true,
+                    type: "success",
+                    message: "Notifications enabled successfully!",
+                  });
                 }
 
                 setIsNotificationConfirmationOpen(false);
