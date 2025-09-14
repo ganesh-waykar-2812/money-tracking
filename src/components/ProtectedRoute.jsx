@@ -10,6 +10,7 @@ export default function ProtectedRoute({ children }) {
     localStorage.removeItem("userName");
     localStorage.removeItem("hasSeenHelpModal");
     localStorage.removeItem("masterKey");
+    localStorage.removeItem("isAdmin");
   }
   if (!isAuthenticated) {
     return <Navigate to="/register" replace />;

@@ -26,6 +26,17 @@ const TABS = [
     icon: "💬",
     children: [{ key: "feedbackForm", label: "Feedback Form", icon: "📝" }],
   },
+  {
+    key: "adminFeatures",
+    label: "Admin Features",
+    icon: "🛠️",
+    children: [
+      { key: "userManagement", label: "User Management", icon: "👥" },
+      { key: "systemLogs", label: "System Logs", icon: "📜" },
+      { key: "settings", label: "Settings", icon: "⚙️" },
+      { key: "feedbackManagement", label: "Feedback Management", icon: "🗂️" },
+    ],
+  },
 ];
 
 function App() {
@@ -33,6 +44,11 @@ function App() {
   const [userName, setUserName] = useState(userNameFromStorage);
   const [activeTab, setActiveTab] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const filteredTabs = TABS.filter(
+    (tab) =>
+      tab.key !== "adminFeatures" || localStorage.getItem("isAdmin") === "true"
+  );
+  console.log("Filtered Tabs:", filteredTabs);
 
   const handleLogout = async () => {
     try {
@@ -52,6 +68,7 @@ function App() {
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
     localStorage.removeItem("masterKey");
+    localStorage.removeItem("isAdmin");
 
     // Reset UI state
     setUserName("");
@@ -64,6 +81,7 @@ function App() {
       localStorage.removeItem("token");
       localStorage.removeItem("userName");
       localStorage.removeItem("masterKey");
+      localStorage.removeItem("isAdmin");
       // window.location.href = "/register";
       setUserName("");
       setActiveTab(null);
@@ -83,7 +101,7 @@ function App() {
           onLogout={handleLogout}
           sidebarOpen={sidebarOpen}
           onSidebarToggle={() => setSidebarOpen((v) => !v)}
-          tabs={TABS}
+          tabs={filteredTabs}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           expandedSection={expandedSection}
@@ -98,7 +116,7 @@ function App() {
                   <Dashboard
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
-                    tabs={TABS}
+                    tabs={filteredTabs}
                     expandedSection={expandedSection}
                     setExpandedSection={setExpandedSection}
                   />

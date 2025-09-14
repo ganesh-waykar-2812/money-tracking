@@ -553,55 +553,60 @@ const TransactionList = () => {
         </div>
       </div>
       {/* Summary */}
-      <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight">
-        Lend & Borrow Summary
-      </h2>
-      <Summary summary={filteredSummary} totalOutstanding={totalOutstanding} />
-      {/* Transaction List */}
-      <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight">
-        Transactions List
-      </h2>
-      <div className="bg-white  rounded shadow text-black">
-        <ul className="space-y-1">
-          {filteredTxns.map((txn) => {
-            const details = typeDetails[txn.type] || {};
-            return (
-              <li
-                key={txn._id}
-                className={`flex items-center gap-3 p-2 rounded ${
-                  details.color || "bg-gray-100 text-gray-800"
-                }`}
-              >
-                <span className="text-xl">{details.icon}</span>
-                <div className="flex-1 text-left">
-                  <div className="font-medium flex items-center gap-2">
-                    {details.label ? details.label(txn) : "Transaction"}
+      <div className="flex flex-col flex-1 overflow-auto">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight ">
+          Lend & Borrow Summary
+        </h2>
+        <Summary
+          summary={filteredSummary}
+          totalOutstanding={totalOutstanding}
+        />
+        {/* Transaction List */}
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight">
+          Transactions List
+        </h2>
+        <div className="bg-white  rounded shadow text-black">
+          <ul className="space-y-1">
+            {filteredTxns.map((txn) => {
+              const details = typeDetails[txn.type] || {};
+              return (
+                <li
+                  key={txn._id}
+                  className={`flex items-center gap-3 p-2 rounded ${
+                    details.color || "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  <span className="text-xl">{details.icon}</span>
+                  <div className="flex-1 text-left">
+                    <div className="font-medium flex items-center gap-2">
+                      {details.label ? details.label(txn) : "Transaction"}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {new Date(txn.date).toLocaleDateString()}
+                      {txn.note ? ` • ${txn.note}` : ""}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-600">
-                    {new Date(txn.date).toLocaleDateString()}
-                    {txn.note ? ` • ${txn.note}` : ""}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleEdit(txn)}
+                      className="text-blue-500 hover:text-blue-700 transition"
+                      title="Edit"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(txn)}
+                      className="text-red-500 hover:text-red-700 transition"
+                      title="Delete"
+                    >
+                      <FaTrash />
+                    </button>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => handleEdit(txn)}
-                    className="text-blue-500 hover:text-blue-700 transition"
-                    title="Edit"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(txn)}
-                    className="text-red-500 hover:text-red-700 transition"
-                    title="Delete"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
       <LoadingPopup show={loading} />
     </>

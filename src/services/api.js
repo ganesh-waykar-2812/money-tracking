@@ -64,3 +64,7 @@ export const sendFeedback = (data) => API.post("/feedback", data);
 // Push Notification Subscription API
 export const saveSubscription = (data) => API.post("/subscription", data);
 export const deleteSubscription = () => API.delete("/subscription");
+
+// admin feature
+export const getAllUsers = () => API.get("user/all-users");
+export const getAllFeedbacks = () => API.get("feedback/all-feedbacks");
