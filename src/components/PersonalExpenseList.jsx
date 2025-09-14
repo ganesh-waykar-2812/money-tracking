@@ -428,7 +428,7 @@ export default function PersonalExpenseList() {
       </Modal>
 
       {/* Filter + Export */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sticky top-0 bg-white z-[1] py-1 ">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3  bg-white z-[1] py-1 ">
         <div className="flex gap-2">
           <Dropdown
             label="Filter by Month"
@@ -465,7 +465,7 @@ export default function PersonalExpenseList() {
       </div>
 
       {/* Expense Summary */}
-      <div className=" flex flex-col ">
+      <div className=" flex flex-col flex-1 overflow-auto">
         <h2 className="text-xl font-semibold mb-4 text-gray-900 tracking-tight">
           Expense Summary
         </h2>

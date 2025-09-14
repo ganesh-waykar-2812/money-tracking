@@ -62,6 +62,7 @@ export default function RegisterPage({ setUserName }) {
           localStorage.setItem("token", res.data.token);
           localStorage.setItem("userName", res.data.user.name); // Save user name
           localStorage.setItem("tokenVersion", REQUIRED_TOKEN_VERSION);
+          localStorage.setItem("isAdmin", res.data.user.isAdmin);
           if (res.data.user.masterKey) {
             localStorage.setItem(
               "masterKey",
@@ -162,7 +163,6 @@ export default function RegisterPage({ setUserName }) {
 
   return (
     <>
-      {" "}
       <MessageModal
         show={msgModal.show}
         message={msgModal.message}
@@ -175,7 +175,7 @@ export default function RegisterPage({ setUserName }) {
         title="Data Migration Required"
       >
         <p className="mb-4">
-          Your account's data needs to be migrated for improved security. This
+          Your accounts data needs to be migrated for improved security. This
           process will re-encrypt your data with your new master key.
         </p>
         <div className="flex justify-center gap-4 mt-4">

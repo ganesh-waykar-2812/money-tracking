@@ -7,6 +7,8 @@ import WhatsNew from "../components/WhatsNew";
 import { VAPID_PUBLIC_KEY } from "../constants/globle";
 import { saveSubscription, sendFeedback } from "../services/api";
 import MessageModal from "../components/reusable/MessageModal";
+import UserManagement from "./UserManagement";
+import FeedbackManagement from "./FeedbackManagement";
 
 export default function Dashboard({
   activeTab,
@@ -238,11 +240,11 @@ export default function Dashboard({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col   overflow-auto ">
-          <div className=" bg-white/90    flex-1 relative">
-            <div className="flex-1 flex flex-col  p-2 sm:p-4 md:p-8">
+        <main className="flex-1 flex flex-col   overflow-hidden">
+          <div className=" bg-white/90    flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col  p-2 sm:p-4 md:p-8 overflow-hidden">
               {expandedSection === "dashboard" && (
-                <div className="">
+                <div className="flex flex-1 overflow-auto flex-col">
                   <h1 className="text-2xl font-semibold mb-4 text-indigo-700">
                     Welcome to your Dashboard!
                   </h1>
@@ -257,13 +259,11 @@ export default function Dashboard({
                   <WhatsNew />
                 </div>
               )}
-
               {expandedSection === "transactions" && (
                 <>
                   <TransactionList />
                 </>
               )}
-
               {expandedSection === "personalExpenses" && (
                 <PersonalExpenseList />
               )}
@@ -295,6 +295,9 @@ export default function Dashboard({
                   </div>
                 </>
               )}
+              {activeTab === "userManagement" && <UserManagement />}
+              feedbackManagement
+              {activeTab === "feedbackManagement" && <FeedbackManagement />}
             </div>
           </div>
         </main>
