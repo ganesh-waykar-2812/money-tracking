@@ -16,6 +16,7 @@ const categories = [
   "Education",
   "Gifts",
   "Investment",
+  "Recharge",
   "Other",
 ];
 
