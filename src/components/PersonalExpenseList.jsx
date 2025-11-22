@@ -135,8 +135,8 @@ export default function PersonalExpenseList() {
 
     // Show applied filter
     let filterLabel = "All";
-    if (selectedMonth !== "all") {
-      filterLabel = new Date(selectedMonth + "-01").toLocaleString("default", {
+    if (selectedMonth._id !== "all") {
+      filterLabel = new Date(selectedMonth._id + "-01").toLocaleString("default", {
         year: "numeric",
         month: "long",
       });
