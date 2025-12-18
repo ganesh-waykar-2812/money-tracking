@@ -18,7 +18,9 @@ import { Button } from "./reusable/Button";
 import MultiSelectDropdown from "./reusable/MultiSelectDropdown";
 import MessageModal from "./reusable/MessageModal";
 
-export default function PersonalExpenseList() {
+export default function 
+
+PersonalExpenseList() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
     useState(false);

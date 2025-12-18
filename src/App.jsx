@@ -4,8 +4,13 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { REQUIRED_TOKEN_VERSION } from "./constants/globle";
-import Dashboard from "./pages/Dashboard";
+import Dashboard, { DashboardHome, FeedbackForm } from "./pages/Dashboard";
+import Trips from "./pages/Trips";
 import RegisterPage from "./pages/RegisterPage";
+import TransactionList from "./components/TransactionList";
+import PersonalExpenseList from "./components/PersonalExpenseList";
+import UserManagement from "./pages/UserManagement";
+import FeedbackManagement from "./pages/FeedbackManagement";
 import { deleteSubscription } from "./services/api";
 
 const TABS = [
@@ -19,6 +24,11 @@ const TABS = [
     key: "personalExpenses",
     label: "Personal Expenses",
     icon: "🧾",
+  },
+  {
+    key: "trips",
+    label: "Trips",
+    icon: "✈️",
   },
   {
     key: "feedback",
@@ -42,7 +52,6 @@ const TABS = [
 function App() {
   const userNameFromStorage = localStorage.getItem("userName") || "";
   const [userName, setUserName] = useState(userNameFromStorage);
-  const [activeTab, setActiveTab] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const filteredTabs = TABS.filter(
     (tab) =>
@@ -72,7 +81,6 @@ function App() {
 
     // Reset UI state
     setUserName("");
-    setActiveTab(null);
     setSidebarOpen(false);
   };
   const storedVersion = localStorage.getItem("tokenVersion") || "";
@@ -84,15 +92,9 @@ function App() {
       localStorage.removeItem("isAdmin");
       // window.location.href = "/register";
       setUserName("");
-      setActiveTab(null);
       setSidebarOpen(false);
     }
   }, [storedVersion, userNameFromStorage]);
-  // In App.jsx
-  // Local state to track which section is expanded
-
-  const [expandedSection, setExpandedSection] = useState("dashboard"); // Default to dashboard
-
   return (
     <BrowserRouter>
       <div className="flex flex-col h-screen w-screen bg-gray-100 overflow-hidden">
@@ -102,27 +104,35 @@ function App() {
           sidebarOpen={sidebarOpen}
           onSidebarToggle={() => setSidebarOpen((v) => !v)}
           tabs={filteredTabs}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          expandedSection={expandedSection}
-          setExpandedSection={setExpandedSection}
         />
         <div className="flex-1 flex overflow-hidden">
           <Routes>
-            <Route
-              path="/"
+            <Route path="/" element={<ProtectedRoute><Dashboard tabs={filteredTabs} /></ProtectedRoute>}>
+              <Route index element={<DashboardHome />} />
+              <Route path="transactions" element={<TransactionList />} />
+              <Route path="personalExpenses" element={<PersonalExpenseList />} />
+              <Route path="feedbackForm" element={<FeedbackForm />} />
+              <Route path="userManagement" element={<UserManagement />} />
+              <Route path="feedbackManagement" element={<FeedbackManagement />} />
+               <Route
+              path="/trips"
               element={
                 <ProtectedRoute>
-                  <Dashboard
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    tabs={filteredTabs}
-                    expandedSection={expandedSection}
-                    setExpandedSection={setExpandedSection}
-                  />
+                  <Trips />
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/trips/:id"
+              element={
+                <ProtectedRoute>
+                  <Trips />
+                </ProtectedRoute>
+              }
+            />
+            </Route>
+
+           
             <Route
               path="/register"
               element={<RegisterPage setUserName={setUserName} />}

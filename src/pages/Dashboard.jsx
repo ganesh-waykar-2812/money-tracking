@@ -2,21 +2,15 @@ import { useEffect, useState } from "react";
 import PersonalExpenseList from "../components/PersonalExpenseList";
 import { Button } from "../components/reusable/Button";
 import Modal from "../components/reusable/Modal";
-import TransactionList from "../components/TransactionList";
 import WhatsNew from "../components/WhatsNew";
 import { VAPID_PUBLIC_KEY } from "../constants/globle";
 import { saveSubscription, sendFeedback } from "../services/api";
 import MessageModal from "../components/reusable/MessageModal";
 import UserManagement from "./UserManagement";
 import FeedbackManagement from "./FeedbackManagement";
+import { Outlet, useLocation, useNavigate, NavLink } from "react-router-dom";
 
-export default function Dashboard({
-  activeTab,
-  setActiveTab,
-  tabs,
-  expandedSection,
-  setExpandedSection,
-}) {
+export function FeedbackForm(){
   const [feedback, setFeedback] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [msgModal, setMsgModal] = useState({
@@ -53,6 +47,60 @@ export default function Dashboard({
     }
     setFeedbackLoading(false);
   };
+
+  return (
+    <div>
+      <MessageModal
+        show={msgModal.show}
+        message={msgModal.message}
+        type={msgModal.type}
+        onClose={() => setMsgModal({ ...msgModal, show: false })}
+      />
+      <div>
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
+          Feedback
+        </h2>
+        <div className="bg-white p-4 rounded shadow text-black">
+          <p>
+            We would love to hear your feedback! Please type your message and send it.
+          </p>
+          <textarea
+            className="w-full p-2 border border-gray-300 rounded mt-2"
+            rows="4"
+            placeholder="Type your feedback here..."
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            disabled={feedbackLoading}
+          />
+          <button
+            className="mt-2 button-custom"
+            onClick={handleSendFeedback}
+            disabled={feedbackLoading || !feedback.trim()}
+          >
+            {feedbackLoading ? "Sending..." : "Send Feedback"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function DashboardHome(){
+  return (
+    <div className="flex flex-1 overflow-auto flex-col">
+      <h1 className="text-2xl font-semibold mb-4 text-indigo-700">
+        Welcome to your Dashboard!
+      </h1>
+      <p className="text-lg text-gray-700 mb-2">
+        The Lend & Borrow and Personal Expenses sections now offer a unified, modern experience. Add, filter, and export your data with ease.
+      </p>
+      <p className="text-md text-gray-500">Use the sidebar to switch between features and get started.</p>
+      <WhatsNew />
+    </div>
+  );
+}
+
+export default function Dashboard({ tabs }) {
 
   function urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -92,8 +140,8 @@ export default function Dashboard({
     const currentStatus = checkNotificationStatus();
 
     if (currentStatus === "granted") {
-      subscribeUser();
-      return;
+      await subscribeUser();
+      return true;
     }
     if (currentStatus === "denied") {
       setMsgModal({
@@ -102,17 +150,23 @@ export default function Dashboard({
         message:
           "You have denied notifications. You can enable them in your browser settings.",
       });
-      return;
+      return false;
     }
 
     const permission = await Notification.requestPermission();
 
     if (permission === "granted") {
-      subscribeUser();
+      await subscribeUser();
+      return true;
     }
+    return false;
   };
   const [isNotificationConfirmationOpen, setIsNotificationConfirmationOpen] =
     useState(false);
+
+  const [msgModal, setMsgModal] = useState({ show: false, type: "success", message: "" });
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const registerAndCheck = async () => {
@@ -132,9 +186,13 @@ export default function Dashboard({
     registerAndCheck();
   }, []);
 
+  // Dashboard now acts as a layout for nested routes
+  // The actual child content (home, transactions, personalExpenses, admin pages)
+  // are rendered via the nested routes defined in App.jsx using <Outlet />
+
+
   return (
-    <>
-      <MessageModal
+    <><MessageModal
         show={msgModal.show}
         message={msgModal.message}
         type={msgModal.type}
@@ -188,54 +246,61 @@ export default function Dashboard({
         `}
         >
           <div className="flex flex-col gap-2">
-            {tabs.map((section) => (
-              <div key={section.key}>
-                <button
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition text-left w-full ${
-                    expandedSection === section.key
-                      ? "bg-indigo-500 text-white shadow"
-                      : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
-                  }`}
-                  onClick={() => {
-                    setExpandedSection(
-                      expandedSection === section.key ? null : section.key
-                    );
-                    setActiveTab(null); // default to first sub-tab
-                  }}
-                >
-                  <span>{section.icon}</span>
-                  <span>{section.label}</span>
-                  {section.children && section.children.length > 0 ? (
-                    <span className="ml-auto">
-                      {expandedSection === section.key ? "▲" : "▼"}
-                    </span>
-                  ) : null}
-                </button>
-                {/* Sub-tabs: only show if this section is expanded */}
-                {expandedSection === section.key &&
-                  section.children &&
-                  section.children.length > 0 && (
+            {tabs.map((section) => {
+              const hasChildren = section.children && section.children.length > 0;
+              const childrenKeys = (section.children || []).map((c) => `/${c.key}`);
+              const pathname = location.pathname || "/";
+              const isExpanded =
+                (hasChildren && childrenKeys.some((k) => pathname.startsWith(k))) ||
+                (section.key === "dashboard" && pathname === "/") ||
+                pathname.startsWith(`/${section.key}`);
+
+              return (
+                <div key={section.key}>
+                  <button
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition text-left w-full ${
+                      isExpanded
+                        ? "bg-indigo-500 text-white shadow"
+                        : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
+                    }`}
+                    onClick={() => {
+                      if (hasChildren) {
+                        navigate(section.children[0] ? `/${section.children[0].key}` : `/${section.key}`);
+                      } else {
+                        navigate(section.key === "dashboard" ? "/" : `/${section.key}`);
+                      }
+                    }}
+                  >
+                    <span>{section.icon}</span>
+                    <span>{section.label}</span>
+                    {hasChildren ? (
+                      <span className="ml-auto">{isExpanded ? "▲" : "▼"}</span>
+                    ) : null}
+                  </button>
+
+                  {isExpanded && hasChildren && (
                     <div className="flex flex-col gap-2 pl-4 pt-4">
                       {section?.children?.map((tabItem) => (
-                        <button
+                        <NavLink
                           key={tabItem.key}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
-                            activeTab === tabItem.key
-                              ? "bg-indigo-400 text-white shadow"
-                              : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
-                          }`}
-                          onClick={() => {
-                            setActiveTab(tabItem.key);
-                          }}
+                          to={`/${tabItem.key}`}
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
+                              isActive
+                                ? "bg-indigo-400 text-white shadow"
+                                : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
+                            }`
+                          }
                         >
                           <span>{tabItem.icon}</span>
                           <span>{tabItem.label}</span>
-                        </button>
+                        </NavLink>
                       ))}
                     </div>
                   )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </aside>
 
@@ -243,61 +308,7 @@ export default function Dashboard({
         <main className="flex-1 flex flex-col   overflow-hidden">
           <div className=" bg-white/90    flex-1 flex overflow-hidden">
             <div className="flex-1 flex flex-col  p-2 sm:p-4 md:p-8 overflow-hidden">
-              {expandedSection === "dashboard" && (
-                <div className="flex flex-1 overflow-auto flex-col">
-                  <h1 className="text-2xl font-semibold mb-4 text-indigo-700">
-                    Welcome to your Dashboard!
-                  </h1>
-                  <p className="text-lg text-gray-700 mb-2">
-                    The Lend & Borrow and Personal Expenses sections now offer a
-                    unified, modern experience. Add, filter, and export your
-                    data with ease.
-                  </p>
-                  <p className="text-md text-gray-500">
-                    Use the sidebar to switch between features and get started.
-                  </p>
-                  <WhatsNew />
-                </div>
-              )}
-              {expandedSection === "transactions" && (
-                <>
-                  <TransactionList />
-                </>
-              )}
-              {expandedSection === "personalExpenses" && (
-                <PersonalExpenseList />
-              )}
-              {activeTab === "feedbackForm" && (
-                <>
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 tracking-tight">
-                    Feedback
-                  </h2>
-                  <div className="bg-white p-4 rounded shadow text-black">
-                    <p>
-                      We would love to hear your feedback! Please type your
-                      message and send it.
-                    </p>
-                    <textarea
-                      className="w-full p-2 border border-gray-300 rounded mt-2"
-                      rows="4"
-                      placeholder="Type your feedback here..."
-                      value={feedback}
-                      onChange={(e) => setFeedback(e.target.value)}
-                      disabled={feedbackLoading}
-                    />
-                    <button
-                      className="mt-2 button-custom"
-                      onClick={handleSendFeedback}
-                      disabled={feedbackLoading || !feedback.trim()}
-                    >
-                      {feedbackLoading ? "Sending..." : "Send Feedback"}
-                    </button>
-                  </div>
-                </>
-              )}
-              {activeTab === "userManagement" && <UserManagement />}
-              feedbackManagement
-              {activeTab === "feedbackManagement" && <FeedbackManagement />}
+              <Outlet />
             </div>
           </div>
         </main>

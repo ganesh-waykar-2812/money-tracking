@@ -1,14 +1,48 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+
 export default function Header({
   userName,
   onLogout,
   sidebarOpen,
   onSidebarToggle,
   tabs,
-  activeTab,
-  setActiveTab,
-  expandedSection,
-  setExpandedSection,
 }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname || "/";
+
+  // derive expanded section directly from the route (consider child paths)
+  const expandedSection =
+    tabs.find((tab) => {
+      const children = tab.children || [];
+      if (tab.key === "dashboard" && currentPath === "/") return true;
+      if (children.some((c) => currentPath.startsWith(`/${c.key}`))) return true;
+      return currentPath.startsWith(`/${tab.key}`);
+    })?.key || null;
+
+  const [activeTab, setActiveTab] = useState(null);
+
+  useEffect(() => {
+    // Ensure we set the active child tab based on the pathname.
+    // Routes in this app use top-level paths like '/userManagement' and '/feedbackForm',
+    // so match against '/<subTabKey>'.
+    const path = location.pathname;
+    console.log("Header useEffect: ", { path, tabs });
+    for (const section of tabs) {
+      if (section.children && section.children.length > 0) {
+        for (const subTab of section.children) {
+          if (path === `/${subTab.key}`) {
+            setActiveTab(subTab.key);
+            return;
+          }
+        }
+      }
+    }
+  }, [tabs, location.pathname]);
+
+
+
   return (
     <header className="flex flex-row items-center sm:items-stretch justify-between px-4 py-3 sm:px-8 sm:py-5 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 shadow-lg rounded-b-2xl relative shrink-0">
       {/* Sidebar Toggle Button (mobile only) */}
@@ -53,10 +87,12 @@ export default function Header({
                     : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
                 }`}
                 onClick={() => {
-                  setExpandedSection(
-                    expandedSection === section.key ? null : section.key
-                  );
-                  setActiveTab(null);
+                  // navigate to the first child if exists, otherwise to the section route
+                  if (section.children && section.children[0]) {
+                    navigate(`/${section.children[0].key}`);
+                  } else {
+                    navigate(section.key === "dashboard" ? "/" : `/${section.key}`);
+                  }
                 }}
               >
                 <span>{section.icon}</span>
@@ -81,7 +117,7 @@ export default function Header({
                             : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
                         }`}
                         onClick={() => {
-                          setActiveTab(tabItem.key);
+                          navigate(`/${tabItem.key}`);
                         }}
                       >
                         <span>{tabItem.icon}</span>

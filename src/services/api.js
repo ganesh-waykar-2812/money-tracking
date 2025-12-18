@@ -54,6 +54,15 @@ export const addPersonalExpense = (data) =>
   API.post("/personal-expenses", data);
 export const deletePersonalExpense = (id) =>
   API.delete(`/personal-expenses/${id}`);
+
+// Trips API
+export const createTrip = (data) => API.post("/trips", data);
+export const joinTrip = (data) => API.post("/trips/join", data);
+export const getTrips = () => API.get("/trips");
+export const getTrip = (id) => API.get(`/trips/${id}`);
+export const addTripExpense = (tripId, data) => API.post(`/trips/${tripId}/expense`, data);
+export const getTripExpenses = (tripId) => API.get(`/trips/${tripId}/expenses`);
+
 // Update personal expense
 export const updatePersonalExpense = (id, data) =>
   API.put(`/personal-expenses/${id}`, data);
