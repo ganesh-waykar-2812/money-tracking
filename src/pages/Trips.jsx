@@ -173,14 +173,27 @@ export default function Trips() {
     fetchTrips();
   };
 
+  const [addingExpense, setAddingExpense] = useState(false);
+
   const addExpenseHandler = async () => {
-    await addTripExpense(selectedTrip.trip._id, {
-      amount: Number(amount),
-      description: desc,
-    });
-    openTrip(selectedTrip.trip._id);
-    setAmount("");
-    setDesc("");
+    if (!amount || addingExpense) return;
+
+    setAddingExpense(true);
+    try {
+      await addTripExpense(selectedTrip.trip._id, {
+        amount: Number(amount),
+        description: desc,
+      });
+
+      await openTrip(selectedTrip.trip._id); // refresh data
+      setAmount("");
+      setDesc("");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add expense");
+    } finally {
+      setAddingExpense(false);
+    }
   };
 
   const settlements = selectedTrip
@@ -355,7 +368,12 @@ export default function Trips() {
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
           />
-          <Button onClick={addExpenseHandler}>Add Expense</Button>
+          <Button
+            onClick={addExpenseHandler}
+            disabled={addingExpense || !amount}
+          >
+            {addingExpense ? "Adding..." : "Add Expense"}
+          </Button>
         </Modal>
       )}
     </div>
