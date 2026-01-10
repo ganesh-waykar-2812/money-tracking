@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import TextInput from "./reusable/TextInput";
 import Dropdown from "./reusable/Dropdown";
 import { Button } from "./reusable/Button";
+import { FaPlus, FaTrash } from "react-icons/fa";
 
 const categories = [
   "Food",
@@ -22,11 +23,47 @@ const categories = [
 
 export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
   const [form, setForm] = useState({
-    amount: "",
     category: "",
     date: "",
-    note: "",
+    items: [{ amount: "", note: "" }],
   });
+
+  const totalAmount = form.items.reduce(
+    (sum, item) => sum + (Number(item.amount) || 0),
+    0,
+  );
+
+  // Preprocess data before submission
+  const getProcessedData = () => {
+    const validItems = form.items.filter(
+      (item) => item.amount && Number(item.amount) > 0,
+    );
+    const summedAmount = validItems.reduce(
+      (sum, item) => sum + Number(item.amount),
+      0,
+    );
+
+    // Only concatenate notes with amounts for multiple items
+    let concatenatedNotes = "";
+    if (validItems.length > 1) {
+      concatenatedNotes = validItems
+        .map((item) =>
+          item.note ? `${item.amount} - ${item.note}` : item.amount,
+        )
+        .join(", ");
+    } else if (validItems.length === 1 && validItems[0].note) {
+      // For single item, only use the note if provided
+      concatenatedNotes = validItems[0].note;
+    }
+
+    return {
+      category: form.category,
+      date: form.date,
+      amount: summedAmount.toString(),
+      note: concatenatedNotes,
+      ...(form.id && { id: form.id }), // Include id only for edit mode
+    };
+  };
   function isValidDate(dateStr) {
     if (!dateStr) return false;
     const date = new Date(dateStr);
@@ -39,22 +76,51 @@ export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
   useEffect(() => {
     if (isAdd) {
       const today = new Date().toISOString().split("T")[0];
-      setForm({ amount: "", category: "", date: today, note: "" });
+      setForm({ category: "", date: today, items: [{ amount: "", note: "" }] });
     } else if (editData) {
       setForm({
-        amount: editData.amount || "",
         category: editData.category || "",
         date: editData.date
           ? new Date(editData.date).toISOString().split("T")[0]
           : "",
-        note: editData.note || "",
+        items: [
+          { amount: String(editData.amount || ""), note: editData.note || "" },
+        ],
         id: editData._id || "",
       });
     }
   }, [isAdd, editData]);
 
   const isDateValid = isValidDate(form.date);
-  const isValid = form.amount && form.category && isDateValid;
+  const hasValidItems = form.items.some(
+    (item) => item.amount && Number(item.amount) > 0,
+  );
+  const isValid = form.category && isDateValid && hasValidItems;
+
+  const addItem = () => {
+    setForm({
+      ...form,
+      items: [...form.items, { amount: "", note: "" }],
+    });
+  };
+
+  const removeItem = (index) => {
+    if (form.items.length > 1) {
+      setForm({
+        ...form,
+        items: form.items.filter((_, i) => i !== index),
+      });
+    }
+  };
+
+  const updateItem = (index, field, value) => {
+    setForm({
+      ...form,
+      items: form.items.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item,
+      ),
+    });
+  };
 
   return (
     <>
@@ -64,19 +130,17 @@ export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          handleSubmit(form, isAdd);
-          setForm({ amount: "", category: "", date: "", note: "" });
+          const processedData = getProcessedData();
+          handleSubmit(processedData, isAdd);
+          setForm({
+            category: "",
+            date: "",
+            items: [{ amount: "", note: "" }],
+          });
         }}
-        className="mb-4   text-black"
+        className="mb-4 text-black"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <TextInput
-            value={form.amount}
-            onChangeHandler={(v) => setForm({ ...form, amount: v })}
-            placeholder="Amount"
-            inputType="number"
-          />
-
           <Dropdown
             onChangeHandler={(selected) =>
               setForm((prev) => ({ ...prev, category: selected._id }))
@@ -99,13 +163,71 @@ export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
             placeholder="Date"
             inputType="date"
           />
-          <TextInput
-            value={form.note}
-            onChangeHandler={(v) => setForm({ ...form, note: v })}
-            placeholder="Note (optional)"
-            inputType="text"
-            isRequired={false}
-          />
+        </div>
+
+        {/* Multiple Expense Items Section */}
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-medium text-gray-800">Expense Items</h3>
+            {isAdd && (
+              <Button
+                type="button"
+                onClick={addItem}
+                className="text-sm py-1 px-3"
+                variant="secondary"
+              >
+                <FaPlus className="inline mr-1" /> Add Item
+              </Button>
+            )}
+          </div>
+
+          {/* Total Amount Display */}
+          {totalAmount > 0 && (
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 mb-4">
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-indigo-900">
+                  Total Amount:
+                </span>
+                <span className="font-bold text-indigo-900 text-lg">
+                  Rs {totalAmount}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Expense Items List */}
+          <div className="space-y-3">
+            {form.items.map((item, index) => (
+              <div key={index} className="flex gap-2 items-start">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <TextInput
+                    value={item.amount}
+                    onChangeHandler={(v) => updateItem(index, "amount", v)}
+                    placeholder="Amount"
+                    inputType="number"
+                  />
+                  <TextInput
+                    value={item.note}
+                    onChangeHandler={(v) => updateItem(index, "note", v)}
+                    placeholder="Note (optional)"
+                    inputType="text"
+                    isRequired={false}
+                  />
+                </div>
+                {isAdd && form.items.length > 1 && (
+                  <Button
+                    type="button"
+                    onClick={() => removeItem(index)}
+                    className="text-red-500 hover:text-red-700 p-2"
+                    variant="secondary"
+                    title="Remove item"
+                  >
+                    <FaTrash />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
         <Button disabled={!isValid} className="mt-4 w-full">
