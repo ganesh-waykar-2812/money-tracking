@@ -454,16 +454,20 @@ export default function PersonalExpenseList() {
           />
         </div>
 
-        <div className="flex gap-2 ">
-          <Button onClick={handleExportPDF}>Export PDF</Button>
+        <div className="flex gap-2">
+          <Button onClick={handleExportPDF} variant="secondary" leftIcon="📄">
+            Export PDF
+          </Button>
           <Button
             onClick={() => {
               setIsFormModalOpen(true);
               setEditData(null);
               setIsAdd(true);
             }}
+            variant="primary"
+            leftIcon="+"
           >
-            + New Expense
+            New Expense
           </Button>
         </div>
       </div>
@@ -522,20 +526,20 @@ export default function PersonalExpenseList() {
                       Rs {exp.amount}
                     </span>
                     <div className="flex items-center gap-3">
-                      <button
+                      <Button
                         onClick={() => handleEdit(exp)}
-                        className="text-blue-500 hover:text-blue-700 transition"
+                        size="sm"
+                        variant="secondary"
+                        leftIcon={<FaEdit />}
                         title="Edit"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
+                      ></Button>
+                      <Button
                         onClick={() => handleDelete(exp)}
-                        className="text-red-500 hover:text-red-700 transition"
+                        size="sm"
+                        variant="danger"
+                        leftIcon={<FaTrash />}
                         title="Delete"
-                      >
-                        <FaTrash />
-                      </button>
+                      ></Button>
                     </div>
                   </div>
                 </li>

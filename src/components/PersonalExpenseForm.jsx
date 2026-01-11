@@ -143,7 +143,7 @@ export default function PersonalExpenseForm({
             items: [{ amount: "", note: "" }],
           });
         }}
-        className="mb-4 text-black"
+        className="mb-4 text-black group"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Dropdown
@@ -180,8 +180,9 @@ export default function PersonalExpenseForm({
                 onClick={addItem}
                 className="text-sm py-1 px-3"
                 variant="secondary"
+                leftIcon={<FaPlus />}
               >
-                <FaPlus className="inline mr-1" /> Add Item
+                Add Item
               </Button>
             )}
           </div>
@@ -223,12 +224,12 @@ export default function PersonalExpenseForm({
                   <Button
                     type="button"
                     onClick={() => removeItem(index)}
-                    className="text-red-500 hover:text-red-700 p-2"
-                    variant="secondary"
+                    className="p-2"
+                    variant="danger"
+                    size="sm"
+                    leftIcon={<FaTrash />}
                     title="Remove item"
-                  >
-                    <FaTrash />
-                  </Button>
+                  ></Button>
                 )}
               </div>
             ))}

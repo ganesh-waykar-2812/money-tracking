@@ -125,7 +125,12 @@ function JoinTripForm({ onJoined, openTrip }) {
           onChangeHandler={setCode}
           placeholder="Enter invite code"
         />
-        <Button onClick={handleJoin} disabled={loading}>
+        <Button
+          onClick={handleJoin}
+          disabled={loading}
+          variant="primary"
+          loading={loading}
+        >
           {loading ? "Joining..." : "Join"}
         </Button>
       </div>
@@ -219,7 +224,12 @@ export default function Trips() {
           onChangeHandler={setName}
           placeholder="Trip name"
         />
-        <Button onClick={createTripHandler} disabled={creatingTrip || !name}>
+        <Button
+          onClick={createTripHandler}
+          disabled={creatingTrip || !name}
+          variant="primary"
+          loading={creatingTrip}
+        >
           {creatingTrip ? "Creating..." : "Create"}
         </Button>
       </div>
@@ -228,7 +238,11 @@ export default function Trips() {
         {trips.map((t) => (
           <li key={t._id} className="flex justify-between py-2 text-gray-800">
             <span>{t.name}</span>
-            <Button size="sm" onClick={() => openTrip(t._id)}>
+            <Button
+              size="sm"
+              onClick={() => openTrip(t._id)}
+              variant="secondary"
+            >
               Open
             </Button>
           </li>
@@ -382,6 +396,8 @@ export default function Trips() {
           <Button
             onClick={addExpenseHandler}
             disabled={addingExpense || !amount}
+            variant="success"
+            loading={addingExpense}
           >
             {addingExpense ? "Adding..." : "Add Expense"}
           </Button>
