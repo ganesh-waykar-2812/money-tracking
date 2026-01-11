@@ -140,6 +140,7 @@ export default function Trips() {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
+  const [creatingTrip, setCreatingTrip] = useState(false);
 
   const navigate = useNavigate();
   const params = useParams();
@@ -168,9 +169,17 @@ export default function Trips() {
   };
 
   const createTripHandler = async () => {
-    await createTrip({ name });
-    setName("");
-    fetchTrips();
+    if (!name || creatingTrip) return;
+    setCreatingTrip(true);
+    try {
+      await createTrip({ name });
+      setName("");
+      fetchTrips();
+    } catch (err) {
+      alert(err?.response?.data?.message || "Failed to create trip");
+    } finally {
+      setCreatingTrip(false);
+    }
   };
 
   const [addingExpense, setAddingExpense] = useState(false);
@@ -210,7 +219,9 @@ export default function Trips() {
           onChangeHandler={setName}
           placeholder="Trip name"
         />
-        <Button onClick={createTripHandler}>Create</Button>
+        <Button onClick={createTripHandler} disabled={creatingTrip || !name}>
+          {creatingTrip ? "Creating..." : "Create"}
+        </Button>
       </div>
       <JoinTripForm onJoined={fetchTrips} openTrip={openTrip} />
       <ul className="divide-y divide-gray-200">
@@ -310,7 +321,7 @@ export default function Trips() {
                     <span>₹{u.total.toFixed(2)}</span>
                   </div>
                 </div>
-              )
+              ),
             )}
           </div>
 
@@ -328,15 +339,15 @@ export default function Trips() {
                     b.balance === 0
                       ? "text-gray-700"
                       : b.balance > 0
-                      ? "text-green-600"
-                      : "text-red-600"
+                        ? "text-green-600"
+                        : "text-red-600"
                   }`}
                 >
                   {b.balance === 0
                     ? "Settled"
                     : b.balance > 0
-                    ? `Gets ₹${b.balance}`
-                    : `Pays ₹${Math.abs(b.balance)}`}
+                      ? `Gets ₹${b.balance}`
+                      : `Pays ₹${Math.abs(b.balance)}`}
                 </div>
               </div>
             ))}

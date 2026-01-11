@@ -21,7 +21,12 @@ const categories = [
   "Other",
 ];
 
-export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
+export default function PersonalExpenseForm({
+  isAdd,
+  editData,
+  handleSubmit,
+  loading,
+}) {
   const [form, setForm] = useState({
     category: "",
     date: "",
@@ -230,8 +235,8 @@ export default function PersonalExpenseForm({ isAdd, editData, handleSubmit }) {
           </div>
         </div>
 
-        <Button disabled={!isValid} className="mt-4 w-full">
-          {isAdd ? "Add Expense" : "Update Expense"}
+        <Button disabled={!isValid || loading} className="mt-4 w-full">
+          {loading ? "Submitting..." : isAdd ? "Add Expense" : "Update Expense"}
         </Button>
       </form>
     </>

@@ -18,9 +18,7 @@ import { Button } from "./reusable/Button";
 import MultiSelectDropdown from "./reusable/MultiSelectDropdown";
 import MessageModal from "./reusable/MessageModal";
 
-export default function 
-
-PersonalExpenseList() {
+export default function PersonalExpenseList() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
     useState(false);
@@ -41,7 +39,7 @@ PersonalExpenseList() {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     const initialValue = `${now.getFullYear()}-${String(
-      now.getMonth() + 1
+      now.getMonth() + 1,
     ).padStart(2, "0")}`;
     return {
       _id: initialValue,
@@ -83,11 +81,11 @@ PersonalExpenseList() {
   const allMonths = useMemo(
     () =>
       Array.from(
-        new Set(expenses.map((exp) => exp.date?.slice(0, 7)).filter(Boolean))
+        new Set(expenses.map((exp) => exp.date?.slice(0, 7)).filter(Boolean)),
       )
         .sort()
         .reverse(),
-    [expenses]
+    [expenses],
   );
 
   // Build options
@@ -106,7 +104,7 @@ PersonalExpenseList() {
 
   const total = useMemo(
     () => filteredExpenses.reduce((sum, e) => sum + Number(e.amount), 0),
-    [filteredExpenses]
+    [filteredExpenses],
   );
   const byCategory = useMemo(
     () =>
@@ -114,7 +112,7 @@ PersonalExpenseList() {
         acc[e.category] = (acc[e.category] || 0) + Number(e.amount);
         return acc;
       }, {}),
-    [filteredExpenses]
+    [filteredExpenses],
   );
   console.log("byCategory", byCategory);
 
@@ -132,16 +130,19 @@ PersonalExpenseList() {
     doc.text(
       `Downloaded: ${dateStr} ${timeStr}`,
       doc.internal.pageSize.getWidth() - 70,
-      10
+      10,
     );
 
     // Show applied filter
     let filterLabel = "All";
     if (selectedMonth._id !== "all") {
-      filterLabel = new Date(selectedMonth._id + "-01").toLocaleString("default", {
-        year: "numeric",
-        month: "long",
-      });
+      filterLabel = new Date(selectedMonth._id + "-01").toLocaleString(
+        "default",
+        {
+          year: "numeric",
+          month: "long",
+        },
+      );
     }
     doc.setFontSize(11);
     doc.text(`Filter: ${filterLabel}`, 14, 22);
@@ -238,7 +239,7 @@ PersonalExpenseList() {
 
       setExpenses(decryptedExpenses);
       const selectedCategoriesFromApi = Array.from(
-        new Set(decryptedExpenses.map((exp) => exp.category).filter(Boolean))
+        new Set(decryptedExpenses.map((exp) => exp.category).filter(Boolean)),
       ) // unique strings
         .sort();
       // .map((cat) => ({ _id: cat, name: cat })); // convert to objects
@@ -426,6 +427,7 @@ PersonalExpenseList() {
           isAdd={isAdd}
           editData={editData}
           handleSubmit={handleAddPersonalExpense}
+          loading={loading}
         />
       </Modal>
 

@@ -8,6 +8,7 @@ const AddTransactionForm = ({
   form,
   setForm,
   isEdit,
+  loading,
 }) => {
   const transactionOptions = [
     {
@@ -83,8 +84,12 @@ const AddTransactionForm = ({
           isRequired={false}
         />
       </div>
-      <Button className="mt-4 w-full" disabled={!isFormValid}>
-        {isEdit ? "Update Transaction" : "Add Transaction"}
+      <Button className="mt-4 w-full" disabled={!isFormValid || loading}>
+        {loading
+          ? "Submitting..."
+          : isEdit
+            ? "Update Transaction"
+            : "Add Transaction"}
       </Button>
     </form>
   );

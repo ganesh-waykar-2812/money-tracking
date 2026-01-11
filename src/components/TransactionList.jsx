@@ -129,7 +129,7 @@ const TransactionList = () => {
     doc.text(
       `Downloaded: ${dateStr} ${timeStr}`,
       doc.internal.pageSize.getWidth() - 70,
-      10
+      10,
     );
 
     // Render filtered summary as a table
@@ -158,7 +158,7 @@ const TransactionList = () => {
             outstanding,
             status: message,
           };
-        }
+        },
       );
 
       // Add a total row
@@ -173,8 +173,8 @@ const TransactionList = () => {
           totalOutstanding > 0
             ? `You should get back Rs ${totalOutstanding}`
             : totalOutstanding < 0
-            ? `You should pay Rs ${-totalOutstanding}`
-            : "All settled!",
+              ? `You should pay Rs ${-totalOutstanding}`
+              : "All settled!",
       });
 
       autoTable(doc, {
@@ -292,7 +292,7 @@ const TransactionList = () => {
 
   const onAddEditTransaction = async (form) => {
     const updatedDate = new Date(
-      `${form.date}T${new Date().toISOString().split("T")[1]}`
+      `${form.date}T${new Date().toISOString().split("T")[1]}`,
     ).toISOString();
 
     const payload = { ...form, date: updatedDate };
@@ -373,9 +373,9 @@ const TransactionList = () => {
       Object.values(filteredSummary).reduce(
         (sum, data) =>
           sum + (data.lend - data.received - data.borrowed + data.repay),
-        0
+        0,
       ),
-    [filteredSummary]
+    [filteredSummary],
   );
 
   const handleEdit = (txn) => {
@@ -513,6 +513,7 @@ const TransactionList = () => {
           form={form}
           setForm={setForm}
           isEdit={isEdit}
+          loading={loading}
         />
       </Modal>
       {/* Filters and Actions */}
