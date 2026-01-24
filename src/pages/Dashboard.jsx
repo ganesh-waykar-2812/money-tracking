@@ -10,7 +10,7 @@ import UserManagement from "./UserManagement";
 import FeedbackManagement from "./FeedbackManagement";
 import { Outlet, useLocation, useNavigate, NavLink } from "react-router-dom";
 
-export function FeedbackForm(){
+export function FeedbackForm() {
   const [feedback, setFeedback] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [msgModal, setMsgModal] = useState({
@@ -62,7 +62,8 @@ export function FeedbackForm(){
         </h2>
         <div className="bg-white p-4 rounded shadow text-black">
           <p>
-            We would love to hear your feedback! Please type your message and send it.
+            We would love to hear your feedback! Please type your message and
+            send it.
           </p>
           <textarea
             className="w-full p-2 border border-gray-300 rounded mt-2"
@@ -72,36 +73,40 @@ export function FeedbackForm(){
             onChange={(e) => setFeedback(e.target.value)}
             disabled={feedbackLoading}
           />
-          <button
-            className="mt-2 button-custom"
+          <Button
+            className="mt-2"
             onClick={handleSendFeedback}
             disabled={feedbackLoading || !feedback.trim()}
+            loading={feedbackLoading}
+            variant="primary"
           >
             {feedbackLoading ? "Sending..." : "Send Feedback"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
   );
 }
 
-export function DashboardHome(){
+export function DashboardHome() {
   return (
     <div className="flex flex-1 overflow-auto flex-col">
       <h1 className="text-2xl font-semibold mb-4 text-indigo-700">
         Welcome to your Dashboard!
       </h1>
       <p className="text-lg text-gray-700 mb-2">
-        The Lend & Borrow and Personal Expenses sections now offer a unified, modern experience. Add, filter, and export your data with ease.
+        The Lend & Borrow and Personal Expenses sections now offer a unified,
+        modern experience. Add, filter, and export your data with ease.
       </p>
-      <p className="text-md text-gray-500">Use the sidebar to switch between features and get started.</p>
+      <p className="text-md text-gray-500">
+        Use the sidebar to switch between features and get started.
+      </p>
       <WhatsNew />
     </div>
   );
 }
 
 export default function Dashboard({ tabs }) {
-
   function urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding)
@@ -112,15 +117,29 @@ export default function Dashboard({ tabs }) {
   }
 
   async function subscribeUser() {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      const reg = await navigator.serviceWorker.register("../sw.js");
-      const subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
-      // Send subscription and userId to backend
+    try {
+      if ("serviceWorker" in navigator && "PushManager" in window) {
+        const reg = await navigator.serviceWorker.register("/sw.js");
 
-      await saveSubscription({ subscription });
+        const subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+
+        // Send subscription and userId to backend
+        await saveSubscription({ subscription });
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error("Failed to subscribe user:", error);
+      setMsgModal({
+        show: true,
+        type: "error",
+        message: "Failed to enable notifications. Please try again.",
+      });
+      return false;
     }
   }
 
@@ -137,50 +156,86 @@ export default function Dashboard({ tabs }) {
   };
 
   const enableNotification = async () => {
-    const currentStatus = checkNotificationStatus();
+    try {
+      // Check if VAPID key is available
+      if (!VAPID_PUBLIC_KEY) {
+        console.error("VAPID_PUBLIC_KEY is not configured");
+        setMsgModal({
+          show: true,
+          type: "error",
+          message:
+            "Notification service is not properly configured. Please contact support.",
+        });
+        return false;
+      }
 
-    if (currentStatus === "granted") {
-      await subscribeUser();
-      return true;
-    }
-    if (currentStatus === "denied") {
+      const currentStatus = checkNotificationStatus();
+
+      if (currentStatus === "granted") {
+        const result = await subscribeUser();
+        return result;
+      }
+      if (currentStatus === "denied") {
+        setMsgModal({
+          show: true,
+          type: "error",
+          message:
+            "You have denied notifications. You can enable them in your browser settings.",
+        });
+        return false;
+      }
+
+      const permission = await Notification.requestPermission();
+
+      if (permission === "granted") {
+        const result = await subscribeUser();
+        return result;
+      } else {
+        setMsgModal({
+          show: true,
+          type: "error",
+          message: "Notification permission was denied.",
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error("Error enabling notification:", error);
       setMsgModal({
         show: true,
         type: "error",
-        message:
-          "You have denied notifications. You can enable them in your browser settings.",
+        message: "Failed to enable notifications. Please try again.",
       });
       return false;
     }
-
-    const permission = await Notification.requestPermission();
-
-    if (permission === "granted") {
-      await subscribeUser();
-      return true;
-    }
-    return false;
   };
   const [isNotificationConfirmationOpen, setIsNotificationConfirmationOpen] =
     useState(false);
 
-  const [msgModal, setMsgModal] = useState({ show: false, type: "success", message: "" });
+  const [msgModal, setMsgModal] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const registerAndCheck = async () => {
-      if ("serviceWorker" in navigator) {
-        await navigator.serviceWorker.register("/sw.js");
+      try {
+        if ("serviceWorker" in navigator) {
+          await navigator.serviceWorker.register("/sw.js");
 
-        const readyReg = await navigator.serviceWorker.ready;
+          const readyReg = await navigator.serviceWorker.ready;
 
-        const existingSubscription =
-          await readyReg.pushManager.getSubscription();
+          const existingSubscription =
+            await readyReg.pushManager.getSubscription();
 
-        if (!existingSubscription) {
-          setIsNotificationConfirmationOpen(true);
+          if (!existingSubscription) {
+            setIsNotificationConfirmationOpen(true);
+          }
         }
+      } catch (error) {
+        console.error("Error in service worker registration:", error);
       }
     };
     registerAndCheck();
@@ -190,9 +245,9 @@ export default function Dashboard({ tabs }) {
   // The actual child content (home, transactions, personalExpenses, admin pages)
   // are rendered via the nested routes defined in App.jsx using <Outlet />
 
-
   return (
-    <><MessageModal
+    <>
+      <MessageModal
         show={msgModal.show}
         message={msgModal.message}
         type={msgModal.type}
@@ -247,11 +302,15 @@ export default function Dashboard({ tabs }) {
         >
           <div className="flex flex-col gap-2">
             {tabs.map((section) => {
-              const hasChildren = section.children && section.children.length > 0;
-              const childrenKeys = (section.children || []).map((c) => `/${c.key}`);
+              const hasChildren =
+                section.children && section.children.length > 0;
+              const childrenKeys = (section.children || []).map(
+                (c) => `/${c.key}`,
+              );
               const pathname = location.pathname || "/";
               const isExpanded =
-                (hasChildren && childrenKeys.some((k) => pathname.startsWith(k))) ||
+                (hasChildren &&
+                  childrenKeys.some((k) => pathname.startsWith(k))) ||
                 (section.key === "dashboard" && pathname === "/") ||
                 pathname.startsWith(`/${section.key}`);
 
@@ -265,9 +324,15 @@ export default function Dashboard({ tabs }) {
                     }`}
                     onClick={() => {
                       if (hasChildren) {
-                        navigate(section.children[0] ? `/${section.children[0].key}` : `/${section.key}`);
+                        navigate(
+                          section.children[0]
+                            ? `/${section.children[0].key}`
+                            : `/${section.key}`,
+                        );
                       } else {
-                        navigate(section.key === "dashboard" ? "/" : `/${section.key}`);
+                        navigate(
+                          section.key === "dashboard" ? "/" : `/${section.key}`,
+                        );
                       }
                     }}
                   >
