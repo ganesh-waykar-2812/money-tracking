@@ -146,6 +146,8 @@ export default function Trips() {
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
   const [creatingTrip, setCreatingTrip] = useState(false);
+  const [loadingTrips, setLoadingTrips] = useState(true);
+  const [loadingTrip, setLoadingTrip] = useState(false);
 
   const navigate = useNavigate();
   const params = useParams();
@@ -159,18 +161,33 @@ export default function Trips() {
   }, [params.id]);
 
   const fetchTrips = async () => {
-    const res = await getTrips();
-    setTrips(res.data || []);
+    setLoadingTrips(true);
+    try {
+      const res = await getTrips();
+      setTrips(res.data || []);
+    } catch (error) {
+      console.error("Failed to fetch trips:", error);
+    } finally {
+      setLoadingTrips(false);
+    }
   };
 
   const openTrip = async (id) => {
+    setLoadingTrip(true);
     navigate(`/trips/${id}`);
-    const res = await getTrip(id);
-    const data = res.data;
+    try {
+      const res = await getTrip(id);
+      const data = res.data;
 
-    data.balances = computeBalances(data);
-    setSelectedTrip(data);
-    setShowModal(true);
+      data.balances = computeBalances(data);
+      setSelectedTrip(data);
+      setShowModal(true);
+    } catch (error) {
+      console.error("Failed to open trip:", error);
+      alert("Failed to load trip details");
+    } finally {
+      setLoadingTrip(false);
+    }
   };
 
   const createTripHandler = async () => {
@@ -233,21 +250,43 @@ export default function Trips() {
           {creatingTrip ? "Creating..." : "Create"}
         </Button>
       </div>
+
       <JoinTripForm onJoined={fetchTrips} openTrip={openTrip} />
-      <ul className="divide-y divide-gray-200">
-        {trips.map((t) => (
-          <li key={t._id} className="flex justify-between py-2 text-gray-800">
-            <span>{t.name}</span>
-            <Button
-              size="sm"
-              onClick={() => openTrip(t._id)}
-              variant="secondary"
-            >
-              Open
-            </Button>
-          </li>
-        ))}
-      </ul>
+
+      {loadingTrips ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+            <p className="text-gray-600 text-sm">Loading trips...</p>
+          </div>
+        </div>
+      ) : (
+        <ul className="divide-y divide-gray-200">
+          {trips.length === 0 ? (
+            <li className="text-center py-8 text-gray-500">
+              No trips found. Create your first trip!
+            </li>
+          ) : (
+            trips.map((t) => (
+              <li
+                key={t._id}
+                className="flex justify-between py-2 text-gray-800"
+              >
+                <span>{t.name}</span>
+                <Button
+                  size="sm"
+                  onClick={() => openTrip(t._id)}
+                  variant="secondary"
+                  loading={loadingTrip}
+                  disabled={loadingTrip}
+                >
+                  {loadingTrip ? "Loading..." : "Open"}
+                </Button>
+              </li>
+            ))
+          )}
+        </ul>
+      )}
 
       {showModal && selectedTrip && (
         <Modal
