@@ -1,0 +1,12 @@
+# robots.txt for Money Tracker
+# Allow all web crawlers to access the site
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://moneytracker.web-utilities.co.in/sitemap.xml
+
+# Disallow sensitive routes if any
+# Disallow: /api/
+# Disallow: /admin/
