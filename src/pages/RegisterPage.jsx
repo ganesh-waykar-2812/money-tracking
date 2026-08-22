@@ -222,7 +222,7 @@ export default function RegisterPage({ setUserName }) {
                 setLoading(false);
 
                 setUserName(response?.data?.user.name);
-                navigate("/");
+                navigate("/dashboard");
               } catch (error) {
                 setLoading(false);
 

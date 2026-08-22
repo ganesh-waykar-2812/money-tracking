@@ -7,6 +7,7 @@ import { REQUIRED_TOKEN_VERSION } from "./constants/globle";
 import Dashboard, { DashboardHome, FeedbackForm } from "./pages/Dashboard";
 import Trips from "./pages/Trips";
 import RegisterPage from "./pages/RegisterPage";
+import LandingPage from "./pages/LandingPage";
 import TransactionList from "./components/TransactionList";
 import PersonalExpenseList from "./components/PersonalExpenseList";
 import UserManagement from "./pages/UserManagement";
@@ -57,7 +58,7 @@ function App() {
     (tab) =>
       tab.key !== "adminFeatures" || localStorage.getItem("isAdmin") === "true"
   );
-  console.log("Filtered Tabs:", filteredTabs);
+  const isAuthenticated = !!localStorage.getItem("token") && localStorage.getItem("tokenVersion") === REQUIRED_TOKEN_VERSION;
 
   const handleLogout = async () => {
     try {
@@ -98,23 +99,27 @@ function App() {
   return (
     <BrowserRouter>
       <div className="flex flex-col h-screen w-screen bg-gray-100 overflow-hidden">
-        <Header
-          userName={userName}
-          onLogout={handleLogout}
-          sidebarOpen={sidebarOpen}
-          onSidebarToggle={() => setSidebarOpen((v) => !v)}
-          tabs={filteredTabs}
-        />
+        {isAuthenticated && (
+          <Header
+            userName={userName}
+            onLogout={handleLogout}
+            sidebarOpen={sidebarOpen}
+            onSidebarToggle={() => setSidebarOpen((v) => !v)}
+            tabs={filteredTabs}
+          />
+        )}
         <div className="flex-1 flex overflow-hidden">
           <Routes>
-            <Route path="/" element={<ProtectedRoute><Dashboard tabs={filteredTabs} /></ProtectedRoute>}>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard tabs={filteredTabs} /></ProtectedRoute>}>
               <Route index element={<DashboardHome />} />
               <Route path="transactions" element={<TransactionList />} />
               <Route path="personalExpenses" element={<PersonalExpenseList />} />
               <Route path="feedbackForm" element={<FeedbackForm />} />
               <Route path="userManagement" element={<UserManagement />} />
               <Route path="feedbackManagement" element={<FeedbackManagement />} />
-               <Route
+            </Route>
+            <Route
               path="/trips"
               element={
                 <ProtectedRoute>
@@ -130,9 +135,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            </Route>
-
-           
             <Route
               path="/register"
               element={<RegisterPage setUserName={setUserName} />}
@@ -140,7 +142,7 @@ function App() {
           </Routes>
         </div>
         <footer className="text-center text-gray-400 text-sm m-1">
-          Money Tracker &copy; 2025 Ganesh Waykar
+          Money Tracker &copy; 2026 Ganesh Waykar
         </footer>
       </div>
     </BrowserRouter>
