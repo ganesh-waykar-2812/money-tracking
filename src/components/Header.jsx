@@ -16,23 +16,24 @@ export default function Header({
   const expandedSection =
     tabs.find((tab) => {
       const children = tab.children || [];
-      if (tab.key === "dashboard" && currentPath === "/") return true;
-      if (children.some((c) => currentPath.startsWith(`/${c.key}`))) return true;
-      return currentPath.startsWith(`/${tab.key}`);
+      if (tab.key === "dashboard" && currentPath === "/dashboard") return true;
+      if (children.some((c) => currentPath.startsWith(`/dashboard/${c.key}`))) return true;
+      if (tab.key === "trips" && currentPath.startsWith("/trips")) return true;
+      return currentPath.startsWith(`/dashboard/${tab.key}`);
     })?.key || null;
 
   const [activeTab, setActiveTab] = useState(null);
 
   useEffect(() => {
     // Ensure we set the active child tab based on the pathname.
-    // Routes in this app use top-level paths like '/userManagement' and '/feedbackForm',
-    // so match against '/<subTabKey>'.
+    // Routes in this app use nested paths like '/dashboard/userManagement' and '/dashboard/feedbackForm',
+    // so match against '/dashboard/<subTabKey>'.
     const path = location.pathname;
     console.log("Header useEffect: ", { path, tabs });
     for (const section of tabs) {
       if (section.children && section.children.length > 0) {
         for (const subTab of section.children) {
-          if (path === `/${subTab.key}`) {
+          if (path === `/dashboard/${subTab.key}`) {
             setActiveTab(subTab.key);
             return;
           }
@@ -89,9 +90,10 @@ export default function Header({
                 onClick={() => {
                   // navigate to the first child if exists, otherwise to the section route
                   if (section.children && section.children[0]) {
-                    navigate(`/${section.children[0].key}`);
+                    navigate(`/dashboard/${section.children[0].key}`);
                   } else {
-                    navigate(section.key === "dashboard" ? "/" : `/${section.key}`);
+                    navigate(section.key === "dashboard" ? "/dashboard" : 
+                    section.key === "trips" ? "/trips" : `/dashboard/${section.key}`);
                   }
                 }}
               >
@@ -117,7 +119,7 @@ export default function Header({
                             : "bg-gray-100 text-gray-700 hover:bg-indigo-100"
                         }`}
                         onClick={() => {
-                          navigate(`/${tabItem.key}`);
+                          navigate(`/dashboard/${tabItem.key}`);
                         }}
                       >
                         <span>{tabItem.icon}</span>

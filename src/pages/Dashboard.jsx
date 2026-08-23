@@ -305,14 +305,15 @@ export default function Dashboard({ tabs }) {
               const hasChildren =
                 section.children && section.children.length > 0;
               const childrenKeys = (section.children || []).map(
-                (c) => `/${c.key}`,
+                (c) => `/dashboard/${c.key}`,
               );
               const pathname = location.pathname || "/";
               const isExpanded =
                 (hasChildren &&
                   childrenKeys.some((k) => pathname.startsWith(k))) ||
-                (section.key === "dashboard" && pathname === "/") ||
-                pathname.startsWith(`/${section.key}`);
+                (section.key === "dashboard" && pathname === "/dashboard") ||
+                pathname.startsWith(`/dashboard/${section.key}`) ||
+                (section.key === "trips" && pathname.startsWith("/trips"));
 
               return (
                 <div key={section.key}>
@@ -326,12 +327,13 @@ export default function Dashboard({ tabs }) {
                       if (hasChildren) {
                         navigate(
                           section.children[0]
-                            ? `/${section.children[0].key}`
-                            : `/${section.key}`,
+                            ? `/dashboard/${section.children[0].key}`
+                            : `/dashboard/${section.key}`,
                         );
                       } else {
                         navigate(
-                          section.key === "dashboard" ? "/" : `/${section.key}`,
+                          section.key === "dashboard" ? "/dashboard" : 
+                          section.key === "trips" ? "/trips" : `/dashboard/${section.key}`,
                         );
                       }
                     }}
@@ -348,7 +350,7 @@ export default function Dashboard({ tabs }) {
                       {section?.children?.map((tabItem) => (
                         <NavLink
                           key={tabItem.key}
-                          to={`/${tabItem.key}`}
+                          to={`/dashboard/${tabItem.key}`}
                           className={({ isActive }) =>
                             `flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition text-left ${
                               isActive
