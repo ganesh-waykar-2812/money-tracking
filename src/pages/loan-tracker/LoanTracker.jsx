@@ -4,7 +4,7 @@ import AddNewLoanForm from "../../components/loan-tracker/AddNewLoanForm";
 import { Button } from "../../components/reusable/Button";
 import Modal from "../../components/reusable/Modal";
 import TextInput from "../../components/reusable/TextInput";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaArrowRight, FaEdit, FaTrash } from "react-icons/fa";
 import { encryptData } from "../../utils/cryptoUtils";
 import {
   addLoanDocument,
@@ -573,35 +573,45 @@ function LoanTracker() {
               {dashboard?.loans?.length ? (
                 <div className="divide-y divide-gray-200 bg-white">
                   {dashboard.loans.map((item) => (
-                    <button
+                    <div
                       key={item._id}
-                      type="button"
-                      onClick={() =>
-                        navigate(`/dashboard/loanTracker/${item._id}`)
-                      }
-                      className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-gray-50"
+                      className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium">
-                          {item.loanName}
-                        </span>
-                        <span className="mt-1 block text-sm text-gray-500">
-                          {item.direction} · {item.loanType} ·{" "}
-                          {item.lenderBorrower}
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-right">
-                        <span className="block font-semibold">
-                          {formatMoney(
-                            item.outstandingPrincipal,
-                            item.currency,
-                          )}
-                        </span>
-                        <span className="mt-1 inline-block text-xs text-gray-500">
-                          {item.status.replace("_", " ")}
-                        </span>
-                      </span>
-                    </button>
+                      <div className="flex min-w-0 items-center justify-between gap-4 sm:flex-1">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-gray-900">
+                            {item.loanName}
+                          </p>
+                          <p className="mt-1 truncate text-sm text-gray-500">
+                            {item.direction} · {item.loanType} ·{" "}
+                            {item.lenderBorrower}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="font-semibold text-gray-900">
+                            {formatMoney(
+                              item.outstandingPrincipal,
+                              item.currency,
+                            )}
+                          </p>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {item.status.replace("_", " ")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 self-start sm:self-auto"
+                        rightIcon={<FaArrowRight aria-hidden="true" />}
+                        aria-label={`View loan ${item.loanName}`}
+                        onClick={() =>
+                          navigate(`/dashboard/loanTracker/${item._id}`)
+                        }
+                      >
+                        View loan
+                      </Button>
+                    </div>
                   ))}
                 </div>
               ) : (
