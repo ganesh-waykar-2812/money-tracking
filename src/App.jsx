@@ -13,6 +13,7 @@ import PersonalExpenseList from "./components/PersonalExpenseList";
 import UserManagement from "./pages/UserManagement";
 import FeedbackManagement from "./pages/FeedbackManagement";
 import { deleteSubscription } from "./services/api";
+import LoanTracker from "./pages/loan-tracker/LoanTracker";
 
 const TABS = [
   {
@@ -25,6 +26,11 @@ const TABS = [
     key: "personalExpenses",
     label: "Personal Expenses",
     icon: "🧾",
+  },
+  {
+    key: "loanTracker",
+    label: "Loan Tracker",
+    icon: "💰",
   },
   {
     key: "trips",
@@ -56,9 +62,11 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const filteredTabs = TABS.filter(
     (tab) =>
-      tab.key !== "adminFeatures" || localStorage.getItem("isAdmin") === "true"
+      tab.key !== "adminFeatures" || localStorage.getItem("isAdmin") === "true",
   );
-  const isAuthenticated = !!localStorage.getItem("token") && localStorage.getItem("tokenVersion") === REQUIRED_TOKEN_VERSION;
+  const isAuthenticated =
+    !!localStorage.getItem("token") &&
+    localStorage.getItem("tokenVersion") === REQUIRED_TOKEN_VERSION;
 
   const handleLogout = async () => {
     try {
@@ -111,13 +119,28 @@ function App() {
         <div className="flex-1 flex overflow-hidden">
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard tabs={filteredTabs} /></ProtectedRoute>}>
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard tabs={filteredTabs} />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<DashboardHome />} />
               <Route path="transactions" element={<TransactionList />} />
-              <Route path="personalExpenses" element={<PersonalExpenseList />} />
+              <Route
+                path="personalExpenses"
+                element={<PersonalExpenseList />}
+              />
+              <Route path="loanTracker" element={<LoanTracker />} />
+              <Route path="loanTracker/:loanId" element={<LoanTracker />} />
               <Route path="feedbackForm" element={<FeedbackForm />} />
               <Route path="userManagement" element={<UserManagement />} />
-              <Route path="feedbackManagement" element={<FeedbackManagement />} />
+              <Route
+                path="feedbackManagement"
+                element={<FeedbackManagement />}
+              />
             </Route>
             <Route
               path="/trips"

@@ -29,7 +29,7 @@ API.interceptors.response.use(
       window.location.href = "/register"; // or your login route
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export const register = (data) => API.post("/auth/register", data);
@@ -55,12 +55,55 @@ export const addPersonalExpense = (data) =>
 export const deletePersonalExpense = (id) =>
   API.delete(`/personal-expenses/${id}`);
 
+// Loans API
+export const addLoan = (data) => API.post("/loans", data);
+export const updateLoan = (id, data) => API.put(`/loans/${id}`, data);
+export const deleteLoan = (id) => API.delete(`/loans/${id}`);
+export const getLoanDashboard = () => API.get("/loans/dashboard");
+export const getLoans = () => API.get("/loans");
+export const getLoan = (id) => API.get(`/loans/${id}`);
+export const addLoanDisbursement = (id, data) =>
+  API.post(`/loans/${id}/disbursements`, data);
+export const updateLoanDisbursement = (id, disbursementId, data) =>
+  API.put(`/loans/${id}/disbursements/${disbursementId}`, data);
+export const deleteLoanDisbursement = (id, disbursementId) =>
+  API.delete(`/loans/${id}/disbursements/${disbursementId}`);
+export const addLoanOffsetTransaction = (id, data) =>
+  API.post(`/loans/${id}/offset-transactions`, data);
+export const updateLoanOffsetTransaction = (id, offsetTransactionId, data) =>
+  API.put(`/loans/${id}/offset-transactions/${offsetTransactionId}`, data);
+export const deleteLoanOffsetTransaction = (id, offsetTransactionId) =>
+  API.delete(`/loans/${id}/offset-transactions/${offsetTransactionId}`);
+export const addLoanTransaction = (id, data) =>
+  API.post(`/loans/${id}/transactions`, data);
+export const updateLoanTransaction = (id, transactionId, data) =>
+  API.put(`/loans/${id}/transactions/${transactionId}`, data);
+export const deleteLoanTransaction = (id, transactionId) =>
+  API.delete(`/loans/${id}/transactions/${transactionId}`);
+export const updateLoanStatus = (id, status) =>
+  API.patch(`/loans/${id}/status`, { status });
+export const updateLoanRate = (id, data) =>
+  API.post(`/loans/${id}/rates`, data);
+export const editLoanRate = (id, rateId, data) =>
+  API.put(`/loans/${id}/rates/${rateId}`, data);
+export const deleteLoanRate = (id, rateId) =>
+  API.delete(`/loans/${id}/rates/${rateId}`);
+export const updateLoanTerms = (id, data) =>
+  API.patch(`/loans/${id}/terms`, data);
+export const addLoanDocument = (id, data) =>
+  API.post(`/loans/${id}/documents`, data);
+export const editLoanDocument = (id, documentId, data) =>
+  API.put(`/loans/${id}/documents/${documentId}`, data);
+export const deleteLoanDocument = (id, documentId) =>
+  API.delete(`/loans/${id}/documents/${documentId}`);
+
 // Trips API
 export const createTrip = (data) => API.post("/trips", data);
 export const joinTrip = (data) => API.post("/trips/join", data);
 export const getTrips = () => API.get("/trips");
 export const getTrip = (id) => API.get(`/trips/${id}`);
-export const addTripExpense = (tripId, data) => API.post(`/trips/${tripId}/expense`, data);
+export const addTripExpense = (tripId, data) =>
+  API.post(`/trips/${tripId}/expense`, data);
 export const getTripExpenses = (tripId) => API.get(`/trips/${tripId}/expenses`);
 
 // Update personal expense

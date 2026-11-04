@@ -17,6 +17,7 @@ const categories = [
   "Education",
   "Gifts",
   "Investment",
+  "Loan Interest & Charges",
   "Recharge",
   "Other",
 ];
