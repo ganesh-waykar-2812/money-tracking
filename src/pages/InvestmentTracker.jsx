@@ -534,9 +534,10 @@ export default function InvestmentTracker() {
                                     </span>
                                   )}
                                 </div>
-                                {transaction.loanTransactionId ? (
+                                {transaction.loanTransactionId ||
+                                transaction.loanDisbursementId ? (
                                   <span className="text-xs font-medium text-indigo-700">
-                                    Linked loan repayment · manage in Loan Tracker
+                                    Linked loan transaction · manage in Loan Tracker
                                   </span>
                                 ) : (
                                   <div className="flex gap-2">

@@ -135,6 +135,7 @@ function LoanTracker() {
   const [errorMessage, setErrorMessage] = useState("");
   const [notice, setNotice] = useState("");
   const [modal, setModal] = useState("");
+  const [transactionKind, setTransactionKind] = useState("repayment");
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [editingRate, setEditingRate] = useState(null);
   const [editingDocument, setEditingDocument] = useState(null);
@@ -183,6 +184,8 @@ function LoanTracker() {
     transactionDate: new Date().toISOString().slice(0, 10),
     reference: "",
     notes: "",
+    investmentId: "",
+    investmentDetailId: "",
   });
 
   const loadData = useCallback(async () => {
@@ -231,8 +234,10 @@ function LoanTracker() {
     return String(linkedLoanId || "") === String(loanId || "");
   });
 
-  const openNewRepayment = () => {
+  const openNewTransaction = (kind = "repayment") => {
     setEditingTransaction(null);
+    setEditingDisbursement(null);
+    setTransactionKind(kind);
     setRepayment({
       type: "EMI",
       transactionDate: new Date().toISOString().slice(0, 10),
@@ -242,6 +247,14 @@ function LoanTracker() {
       interestAmount: "",
       charges: "0",
       paymentMethod: "BANK_TRANSFER",
+      reference: "",
+      notes: "",
+      investmentId: "",
+      investmentDetailId: "",
+    });
+    setDisbursementForm({
+      amount: "",
+      transactionDate: new Date().toISOString().slice(0, 10),
       reference: "",
       notes: "",
       investmentId: "",
@@ -396,6 +409,9 @@ function LoanTracker() {
     const payload = {
       ...disbursementForm,
       amount: Number(disbursementForm.amount),
+      investmentAmount: disbursementForm.investmentId
+        ? Number(disbursementForm.investmentAmount)
+        : null,
     };
     try {
       if (editingDisbursement) {
@@ -409,6 +425,8 @@ function LoanTracker() {
         transactionDate: new Date().toISOString().slice(0, 10),
         reference: "",
         notes: "",
+        investmentId: "",
+        investmentDetailId: "",
       });
       setModal("");
       setNotice(
@@ -763,8 +781,8 @@ function LoanTracker() {
               >
                 Rate history
               </Button>
-              <Button size="sm" onClick={openNewRepayment}>
-                Record repayment
+              <Button size="sm" onClick={() => openNewTransaction()}>
+                Record transaction
               </Button>
             </div>
           </div>
@@ -988,11 +1006,15 @@ function LoanTracker() {
                       transactionDate: new Date().toISOString().slice(0, 10),
                       reference: "",
                       notes: "",
+                      investmentId: "",
+                      investmentDetailId: "",
+                      investmentAmount: "",
                     });
-                    setModal("disbursement");
+                    setTransactionKind("disbursement");
+                    setModal("repayment");
                   }}
                 >
-                  Record disbursement
+                  Record transaction
                 </Button>
               </div>
               <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -1051,8 +1073,18 @@ function LoanTracker() {
                                       .slice(0, 10),
                                     reference: entry.reference || "",
                                     notes: entry.notes || "",
+                                    investmentId: entry.investmentId || "",
+                                    investmentDetailId:
+                                      entry.investmentDetailId || "",
+                                    investmentAmount: entry.investmentId
+                                      ? String(
+                                          entry.investmentAmount ??
+                                            entry.amount,
+                                        )
+                                      : "",
                                   });
-                                  setModal("disbursement");
+                                  setTransactionKind("disbursement");
+                                  setModal("repayment");
                                 }}
                               />
                               <IconAction
@@ -1085,8 +1117,8 @@ function LoanTracker() {
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-semibold">Repayment ledger</h2>
-                <Button size="sm" onClick={openNewRepayment}>
-                  Add transaction
+                <Button size="sm" onClick={() => openNewTransaction()}>
+                  Record transaction
                 </Button>
               </div>
               {loan.transactions?.length ? (
@@ -1140,6 +1172,7 @@ function LoanTracker() {
                                 action="Edit repayment"
                                 onClick={() => {
                                   setEditingTransaction(entry);
+                                  setTransactionKind("repayment");
                                   setRepayment({
                                     type: entry.type,
                                     transactionDate: new Date(
@@ -1617,24 +1650,47 @@ function LoanTracker() {
         <AddNewLoanForm onSubmit={handleNewLoan} />
       </Modal>
       <Modal
-        show={modal === "disbursement"}
+        show={modal === "repayment" && transactionKind === "disbursement"}
         onClose={() => {
           setModal("");
           setEditingDisbursement(null);
+          setTransactionKind("repayment");
         }}
         title={
           editingDisbursement ? "Edit disbursement" : "Record disbursement"
         }
       >
         <form onSubmit={handleDisbursement} className="space-y-4">
+          {!editingDisbursement && (
+            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              Transaction type
+              <select
+                value={transactionKind}
+                onChange={(event) => setTransactionKind(event.target.value)}
+                className="border border-gray-300 bg-white px-3 py-2 font-normal text-gray-900"
+              >
+                <option value="repayment">Repayment</option>
+                <option value="disbursement">Disbursement</option>
+              </select>
+            </label>
+          )}
           <TextInput
             label="Amount released"
             value={disbursementForm.amount}
             onChangeHandler={(value) =>
-              setDisbursementForm((previous) => ({
-                ...previous,
-                amount: value,
-              }))
+             setDisbursementForm((previous) => {
+               const investmentUsesFullAmount =
+                 previous.investmentId &&
+                 Number(previous.investmentAmount) ===
+                   Number(previous.amount);
+               return {
+                 ...previous,
+                 amount: value,
+                 ...(investmentUsesFullAmount
+                   ? { investmentAmount: value }
+                   : {}),
+               };
+             })
             }
             inputType="number"
             isRequired
@@ -1651,6 +1707,90 @@ function LoanTracker() {
             inputType="date"
             isRequired
           />
+          <div className="rounded border border-indigo-100 bg-indigo-50 p-3">
+            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              Add this disbursement to an investment (optional)
+              <select
+                value={disbursementForm.investmentId}
+                onChange={(event) =>
+                  setDisbursementForm((previous) => ({
+                    ...previous,
+                    investmentId: event.target.value,
+                    investmentDetailId: "",
+                    investmentAmount: event.target.value
+                      ? previous.investmentAmount || previous.amount
+                      : "",
+                  }))
+                }
+                className="border border-gray-300 bg-white px-3 py-2 font-normal text-gray-900"
+              >
+                <option value="">Do not link to an investment</option>
+                {linkedInvestments.map((investment) => (
+                  <option key={investment._id} value={investment._id}>
+                    {investment.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {disbursementForm.investmentId && (
+              <label className="mt-3 flex flex-col gap-1 text-sm font-medium text-gray-700">
+                Investment cost detail
+                <select
+                  value={disbursementForm.investmentDetailId}
+                  onChange={(event) =>
+                    setDisbursementForm((previous) => ({
+                      ...previous,
+                      investmentDetailId: event.target.value,
+                    }))
+                  }
+                  className="border border-gray-300 bg-white px-3 py-2 font-normal text-gray-900"
+                  required
+                >
+                  <option value="">Select a cost detail</option>
+                  {linkedInvestments
+                    .find(
+                      (investment) =>
+                        investment._id === disbursementForm.investmentId,
+                    )
+                    ?.details?.map((detail) => (
+                      <option key={detail._id} value={detail._id}>
+                        {detail.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            )}
+            {disbursementForm.investmentId && (
+              <label className="mt-3 flex flex-col gap-1 text-sm font-medium text-gray-700">
+                Amount applied to investment
+                <input
+                  type="number"
+                  min="0.01"
+                  max={disbursementForm.amount || undefined}
+                  step="0.01"
+                  value={disbursementForm.investmentAmount}
+                  onChange={(event) =>
+                    setDisbursementForm((previous) => ({
+                      ...previous,
+                      investmentAmount: event.target.value,
+                    }))
+                  }
+                  required
+                  className="border border-gray-300 bg-white px-3 py-2 font-normal text-gray-900"
+                />
+              </label>
+            )}
+            {!linkedInvestments.length && (
+              <p className="mt-2 text-xs text-gray-600">
+                Link an investment to this loan and add a cost detail to enable
+                this option.
+              </p>
+            )}
+            <p className="mt-2 text-xs text-gray-600">
+              Enter how much of this disbursement was applied to the selected
+              investment. It cannot exceed the released amount.
+            </p>
+          </div>
           <TextInput
             label="Reference"
             value={disbursementForm.reference}
@@ -1775,10 +1915,11 @@ function LoanTracker() {
         </form>
       </Modal>
       <Modal
-        show={modal === "repayment"}
+        show={modal === "repayment" && transactionKind === "repayment"}
         onClose={() => {
           setModal("");
           setEditingTransaction(null);
+          setTransactionKind("repayment");
         }}
         title={editingTransaction ? "Edit repayment" : "Record repayment"}
         size="lg"
@@ -1787,6 +1928,19 @@ function LoanTracker() {
           onSubmit={handleRepayment}
           className="grid grid-cols-1 gap-4 sm:grid-cols-2"
         >
+          {!editingTransaction && (
+            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700 sm:col-span-2">
+              Transaction type
+              <select
+                value={transactionKind}
+                onChange={(event) => setTransactionKind(event.target.value)}
+                className="border border-gray-300 bg-white px-3 py-2 font-normal text-gray-900"
+              >
+                <option value="repayment">Repayment</option>
+                <option value="disbursement">Disbursement</option>
+              </select>
+            </label>
+          )}
           <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
             Transaction type
             <select
