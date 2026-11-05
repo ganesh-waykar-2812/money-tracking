@@ -97,6 +97,35 @@ export const editLoanDocument = (id, documentId, data) =>
 export const deleteLoanDocument = (id, documentId) =>
   API.delete(`/loans/${id}/documents/${documentId}`);
 
+// Investments API
+export const getInvestments = () => API.get("/investments");
+export const addInvestment = (data) => API.post("/investments", data);
+export const updateInvestment = (id, data) =>
+  API.put(`/investments/${id}`, data);
+export const deleteInvestment = (id) => API.delete(`/investments/${id}`);
+export const addInvestmentDetail = (id, data) =>
+  API.post(`/investments/${id}/details`, data);
+export const updateInvestmentDetail = (id, detailId, data) =>
+  API.put(`/investments/${id}/details/${detailId}`, data);
+export const deleteInvestmentDetail = (id, detailId) =>
+  API.delete(`/investments/${id}/details/${detailId}`);
+export const addInvestmentTransaction = (id, detailId, data) =>
+  API.post(`/investments/${id}/details/${detailId}/transactions`, data);
+export const updateInvestmentTransaction = (
+  id,
+  detailId,
+  transactionId,
+  data,
+) =>
+  API.put(
+    `/investments/${id}/details/${detailId}/transactions/${transactionId}`,
+    data,
+  );
+export const deleteInvestmentTransaction = (id, detailId, transactionId) =>
+  API.delete(
+    `/investments/${id}/details/${detailId}/transactions/${transactionId}`,
+  );
+
 // Trips API
 export const createTrip = (data) => API.post("/trips", data);
 export const joinTrip = (data) => API.post("/trips/join", data);

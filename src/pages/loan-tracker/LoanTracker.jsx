@@ -21,6 +21,7 @@ import {
   editLoanRate,
   getLoan,
   getLoanDashboard,
+  getInvestments,
   updateLoanTransaction,
   updateLoanOffsetTransaction,
   updateLoanDisbursement,
@@ -128,6 +129,7 @@ function LoanTracker() {
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
   const [loan, setLoan] = useState(null);
+  const [investments, setInvestments] = useState([]);
   const [activeTab, setActiveTab] = useState("Overview");
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -152,6 +154,8 @@ function LoanTracker() {
     paymentMethod: "BANK_TRANSFER",
     reference: "",
     notes: "",
+    investmentId: "",
+    investmentDetailId: "",
   });
   const [rateForm, setRateForm] = useState({
     interestRate: "",
@@ -186,16 +190,19 @@ function LoanTracker() {
     setErrorMessage("");
     try {
       if (loanId) {
-        const [detail, overview] = await Promise.all([
+        const [detail, overview, investmentResponse] = await Promise.all([
           getLoan(loanId),
           getLoanDashboard(),
+          getInvestments(),
         ]);
         setLoan(detail.data);
         setDashboard(overview.data);
+        setInvestments(investmentResponse.data);
       } else {
         const response = await getLoanDashboard();
         setDashboard(response.data);
         setLoan(null);
+        setInvestments([]);
       }
     } catch (error) {
       setErrorMessage(
@@ -216,6 +223,33 @@ function LoanTracker() {
     loadData();
   };
 
+  const linkedInvestments = investments.filter((investment) => {
+    const linkedLoanId =
+      typeof investment.loanId === "object"
+        ? investment.loanId?._id
+        : investment.loanId;
+    return String(linkedLoanId || "") === String(loanId || "");
+  });
+
+  const openNewRepayment = () => {
+    setEditingTransaction(null);
+    setRepayment({
+      type: "EMI",
+      transactionDate: new Date().toISOString().slice(0, 10),
+      dueDate: "",
+      totalAmount: "",
+      principalAmount: "",
+      interestAmount: "",
+      charges: "0",
+      paymentMethod: "BANK_TRANSFER",
+      reference: "",
+      notes: "",
+      investmentId: "",
+      investmentDetailId: "",
+    });
+    setModal("repayment");
+  };
+
   const handleRepayment = async (event) => {
     event.preventDefault();
     const payload = Object.fromEntries(
@@ -227,7 +261,9 @@ function LoanTracker() {
           "charges",
         ].includes(key)
           ? [key, Number(value || 0)]
-          : [key, value || undefined],
+          : ["investmentId", "investmentDetailId"].includes(key)
+            ? [key, value || null]
+            : [key, value || undefined],
       ),
     );
     try {
@@ -460,6 +496,7 @@ function LoanTracker() {
   const setRepaymentPart = (field, value) => {
     setRepayment((previous) => {
       const next = { ...previous, [field]: value };
+      if (field === "investmentId") next.investmentDetailId = "";
       if (["principalAmount", "interestAmount", "charges"].includes(field)) {
         next.totalAmount = String(
           Number(next.principalAmount || 0) +
@@ -726,7 +763,7 @@ function LoanTracker() {
               >
                 Rate history
               </Button>
-              <Button size="sm" onClick={() => setModal("repayment")}>
+              <Button size="sm" onClick={openNewRepayment}>
                 Record repayment
               </Button>
             </div>
@@ -1048,7 +1085,7 @@ function LoanTracker() {
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-semibold">Repayment ledger</h2>
-                <Button size="sm" onClick={() => setModal("repayment")}>
+                <Button size="sm" onClick={openNewRepayment}>
                   Add transaction
                 </Button>
               </div>
@@ -1074,7 +1111,12 @@ function LoanTracker() {
                             {formatDate(entry.transactionDate)}
                           </td>
                           <td className="px-4 py-3">
-                            {entry.type.replaceAll("_", " ")}
+                            <span>{entry.type.replaceAll("_", " ")}</span>
+                            {entry.investmentId && (
+                              <span className="mt-1 block text-xs font-medium text-indigo-700">
+                                Applied to investment
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-right">
                             {formatMoney(entry.totalAmount, loan.currency)}
@@ -1122,6 +1164,9 @@ function LoanTracker() {
                                       entry.paymentMethod || "BANK_TRANSFER",
                                     reference: entry.reference || "",
                                     notes: entry.notes || "",
+                                    investmentId: entry.investmentId || "",
+                                    investmentDetailId:
+                                      entry.investmentDetailId || "",
                                   });
                                   setModal("repayment");
                                 }}
@@ -1774,14 +1819,6 @@ function LoanTracker() {
             inputType="date"
           />
           <TextInput
-            label="Total payment"
-            value={repayment.totalAmount}
-            onChangeHandler={(value) => setRepaymentPart("totalAmount", value)}
-            inputType="number"
-            isRequired={repayment.type !== "MISSED_EMI"}
-            disabled={repayment.type === "MISSED_EMI"}
-          />
-          <TextInput
             label="Principal"
             value={repayment.principalAmount}
             onChangeHandler={(value) =>
@@ -1797,6 +1834,14 @@ function LoanTracker() {
               setRepaymentPart("interestAmount", value)
             }
             inputType="number"
+          />{" "}
+          <TextInput
+            label="Total payment"
+            value={repayment.totalAmount}
+            onChangeHandler={(value) => setRepaymentPart("totalAmount", value)}
+            inputType="number"
+            isRequired={repayment.type !== "MISSED_EMI"}
+            disabled={repayment.type === "MISSED_EMI"}
           />
           <TextInput
             label="Charges"
@@ -1832,6 +1877,60 @@ function LoanTracker() {
             onChangeHandler={(value) => setRepaymentPart("notes", value)}
             placeholder="Optional note"
           />
+          <div className="sm:col-span-2 rounded border border-indigo-100 bg-indigo-50 p-3">
+            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              Apply this repayment to an investment (optional)
+              <select
+                value={repayment.investmentId}
+                onChange={(event) =>
+                  setRepaymentPart("investmentId", event.target.value)
+                }
+                className="border border-gray-300 bg-white px-3 py-2 font-normal text-gray-900"
+              >
+                <option value="">Do not link to an investment</option>
+                {linkedInvestments.map((investment) => (
+                  <option key={investment._id} value={investment._id}>
+                    {investment.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {repayment.investmentId && (
+              <label className="mt-3 flex flex-col gap-1 text-sm font-medium text-gray-700">
+                Investment cost detail
+                <select
+                  value={repayment.investmentDetailId}
+                  onChange={(event) =>
+                    setRepaymentPart("investmentDetailId", event.target.value)
+                  }
+                  className="border border-gray-300 bg-white px-3 py-2 font-normal text-gray-900"
+                  required
+                >
+                  <option value="">Select a cost detail</option>
+                  {linkedInvestments
+                    .find(
+                      (investment) => investment._id === repayment.investmentId,
+                    )
+                    ?.details?.map((detail) => (
+                      <option key={detail._id} value={detail._id}>
+                        {detail.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            )}
+            {!linkedInvestments.length && (
+              <p className="mt-2 text-xs text-gray-600">
+                Link an investment to this loan and add a cost detail to enable
+                repayment tracking here.
+              </p>
+            )}
+            <p className="mt-2 text-xs text-gray-600">
+              The full repayment amount will appear as a payment on the selected
+              investment detail. You can edit or remove the linked repayment
+              from this loan.
+            </p>
+          </div>
           <div className="sm:col-span-2">
             <p className="mb-3 text-xs text-gray-500">
               Total must equal principal + interest + charges. Principal

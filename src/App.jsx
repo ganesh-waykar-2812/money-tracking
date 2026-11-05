@@ -14,6 +14,7 @@ import UserManagement from "./pages/UserManagement";
 import FeedbackManagement from "./pages/FeedbackManagement";
 import { deleteSubscription } from "./services/api";
 import LoanTracker from "./pages/loan-tracker/LoanTracker";
+import InvestmentTracker from "./pages/InvestmentTracker";
 
 const TABS = [
   {
@@ -31,6 +32,11 @@ const TABS = [
     key: "loanTracker",
     label: "Loan Tracker",
     icon: "💰",
+  },
+  {
+    key: "investments",
+    label: "Investments",
+    icon: "📈",
   },
   {
     key: "trips",
@@ -135,6 +141,7 @@ function App() {
               />
               <Route path="loanTracker" element={<LoanTracker />} />
               <Route path="loanTracker/:loanId" element={<LoanTracker />} />
+              <Route path="investments" element={<InvestmentTracker />} />
               <Route path="feedbackForm" element={<FeedbackForm />} />
               <Route path="userManagement" element={<UserManagement />} />
               <Route
