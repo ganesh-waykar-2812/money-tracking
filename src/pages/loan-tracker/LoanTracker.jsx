@@ -157,6 +157,7 @@ function LoanTracker() {
     notes: "",
     investmentId: "",
     investmentDetailId: "",
+    recordAsExpense: false,
   });
   const [rateForm, setRateForm] = useState({
     interestRate: "",
@@ -251,6 +252,7 @@ function LoanTracker() {
       notes: "",
       investmentId: "",
       investmentDetailId: "",
+      recordAsExpense: loan?.direction === "Borrowed",
     });
     setDisbursementForm({
       amount: "",
@@ -265,6 +267,10 @@ function LoanTracker() {
 
   const handleRepayment = async (event) => {
     event.preventDefault();
+    if (!loan) {
+      setErrorMessage("Load a loan before recording a repayment.");
+      return;
+    }
     const payload = Object.fromEntries(
       Object.entries(repayment).map(([key, value]) =>
         [
@@ -280,26 +286,24 @@ function LoanTracker() {
       ),
     );
     try {
-      if (
+      payload.recordAsExpense =
         loan.direction === "Borrowed" &&
-        Number(repayment.interestAmount) + Number(repayment.charges) > 0
-      ) {
+        repayment.recordAsExpense &&
+        repayment.type !== "MISSED_EMI";
+      if (payload.recordAsExpense) {
         const masterKey = localStorage.getItem("masterKey");
         if (!masterKey) {
           setErrorMessage(
-            "Master key not found. Please sign in again before recording a repayment with interest or charges.",
+            "Master key not found. Please sign in again before recording this repayment as an expense.",
           );
           return;
         }
-        const expenseAmount = String(
-          Number(repayment.interestAmount || 0) +
-            Number(repayment.charges || 0),
-        );
+        const expenseAmount = String(Number(repayment.totalAmount || 0));
         payload.accountingExpense = {
           amount: encryptData(expenseAmount, masterKey),
-          category: "Loan Interest & Charges",
+          category: "Loan Repayment",
           note: encryptData(
-            `${loan.loanName}: ${repayment.type.replaceAll("_", " ")} repayment`,
+            `${loan.loanName}: ${repayment.type.replaceAll("_", " ")} repayment (principal, interest and charges)`,
             masterKey,
           ),
         };
@@ -1200,6 +1204,12 @@ function LoanTracker() {
                                     investmentId: entry.investmentId || "",
                                     investmentDetailId:
                                       entry.investmentDetailId || "",
+                                    recordAsExpense:
+                                      entry.recordAsExpense ??
+                                      (loan.direction === "Borrowed" &&
+                                        Number(entry.interestAmount || 0) +
+                                          Number(entry.charges || 0) >
+                                          0),
                                   });
                                   setModal("repayment");
                                 }}
@@ -2031,6 +2041,29 @@ function LoanTracker() {
             onChangeHandler={(value) => setRepaymentPart("notes", value)}
             placeholder="Optional note"
           />
+          {loan?.direction === "Borrowed" &&
+            repayment.type !== "MISSED_EMI" && (
+              <label className="flex items-start gap-2 rounded border border-emerald-100 bg-emerald-50 p-3 text-sm text-gray-700 sm:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={repayment.recordAsExpense}
+                  onChange={(event) =>
+                    setRepaymentPart(
+                      "recordAsExpense",
+                      event.target.checked,
+                    )
+                  }
+                  className="mt-1"
+                />
+                <span>
+                  Record the full repayment amount as a Personal Expense
+                  <span className="mt-1 block text-xs text-gray-600">
+                    Includes principal, interest, and charges. Uncheck this if
+                    the payment was not from your pocket.
+                  </span>
+                </span>
+              </label>
+            )}
           <div className="sm:col-span-2 rounded border border-indigo-100 bg-indigo-50 p-3">
             <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
               Apply this repayment to an investment (optional)
